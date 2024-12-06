@@ -75,8 +75,8 @@ async function generateCertificate(userId, name, score, photoPath) {
         page.drawImage(photoImage, {
             x: 603, // Adjust X position
             y: 282, // Adjust Y position
-            width: photoDimensions.width/4,
-            height: photoDimensions.height/4
+            width: 150,
+            height: 150
         });
     }
 

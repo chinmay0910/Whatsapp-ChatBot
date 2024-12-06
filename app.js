@@ -1,13 +1,19 @@
 const express = require('express');
 const connectToMongo = require('./db')
-// const initializeBot = require('./bot/quizBot');
+const initializeBot = require('./bot/quizBot');
 const questionRoutes = require('./routes/questionRoutes');
 const UserQuizState = require('./models/UserQuizState');
 const Payment = require('./models/Payment');
+const path = require('path')
 
 const app = express();
 
 app.use(express.json());
+
+
+// Set EJS as the view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'templates'));
 
 // Connect to MongoDB
 connectToMongo();
@@ -26,9 +32,10 @@ app.post('/', async (req, res) => {
         return res.status(400).json({ message: 'Invalid payment data received' });
       }
   
-      const { id: transactionId, amount, status, contact, vpa } = paymentData;
+      const { id: transactionId, amount, status, vpa } = paymentData;
       const email = paymentData.email || paymentData.notes?.email;
-      const mobileNo = contact.replace('+91', ''); // Remove country code if necessary
+      const contact = paymentData.notes?.phone;
+      const mobileNo = contact; // Remove country code if necessary assumming no country code is added
       console.log(paymentData);
       
       // Validation: Ensure required fields are present
@@ -70,12 +77,12 @@ app.post('/', async (req, res) => {
   });
   
 
-app.get('/results', async (req, res) => {
-    // Your result-fetching logic here
-    res.send("hi!!");
+app.get('/', async (req, res) => {
+    res.render('index');  // This will render templates/index.ejs
 });
 
+
 // Initialize WhatsApp Bot
-// initializeBot();
+initializeBot();
 
 app.listen(3000, () => console.log('API server running on http://localhost:3000'));

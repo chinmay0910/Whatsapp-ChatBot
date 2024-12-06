@@ -12,6 +12,7 @@ const userQuizStateSchema = new mongoose.Schema({
     photoPath: String,
     certId: String,
     paymentVerified: { type: Boolean, default: false },
+    quizCompleted: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const UserQuizState = mongoose.model('UserQuizState', userQuizStateSchema);

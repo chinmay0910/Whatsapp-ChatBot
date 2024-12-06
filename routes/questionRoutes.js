@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Question = require('../models/QuizQuestion');  // Import the Question model
+const { fetchQuizQuestions } = require('../controllers/questions');
 
 // 1. Add a new question
 router.post('/add', async (req, res) => {
@@ -71,5 +72,18 @@ router.delete('/delete/:id', async (req, res) => {
         return res.status(500).json({ message: 'Error deleting question', error: err.message });
     }
 });
+
+// 4. Fetch all questions
+router.get('/', async (req, res) => {
+    try {
+        // Fetch all questions from the database
+        const questions = await fetchQuizQuestions();
+        return res.status(200).json(questions); // Return questions as JSON
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'Error fetching questions', error: err.message });
+    }
+});
+
 
 module.exports = router;

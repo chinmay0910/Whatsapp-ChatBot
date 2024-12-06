@@ -40,6 +40,10 @@ function generateOtp() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+
+// Helper: Validate Email
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 // Generate certificate using PDF template
 async function generateCertificate(userId, name, score, photoPath) {
     const templatePath = './public/certificate_template.pdf'; // Path to the PDF template
@@ -64,8 +68,8 @@ async function generateCertificate(userId, name, score, photoPath) {
         page.drawImage(photoImage, {
             x: 603, // Adjust X position
             y: 282, // Adjust Y position
-            width: photoDimensions.width / 4,
-            height: photoDimensions.height / 4
+            width: 150,
+            height: 150
         });
     }
 
@@ -113,6 +117,10 @@ const initializeBot = () => {
         // Check if the user has an existing state in the database
         let userState = await UserQuizState.findOne({ userId });
 
+        if(userState && userState.quizCompleted){
+            client.sendMessage(userId, "Quiz is already completed and your Certificate No is "+userState.certId);
+            return;
+        }
         // Start quiz
         if (message.body.toLowerCase() === 'quiz' && !userState) {
             userState = new UserQuizState({
@@ -132,21 +140,24 @@ const initializeBot = () => {
         }
         // Get name
         else if (userState && !userState.name) {
-            userState.name = message.body;
+            userState.name = message.body.trim();
             await userState.save();
             client.sendMessage(userId, "Thank you! Please enter your email address for verification:");
         }
         // Get email and send OTP
         else if (userState && userState.name && !userState.email) {
-            const email = message.body;
-            userState.email = email;
-            const otp = generateOtp();
-            userState.otp = otp;
-            await userState.save();
+            const email = message.body.trim();
+                if (isValidEmail(email)) {
+                    const otp = generateOtp();
+                    userState.email = email;
+                    userState.otp = otp;
+                    await userState.save();
 
-            // Send OTP
-            sendMail(email, "Quiz OTP Verification", `<p>Your OTP is: <strong>${otp}</strong></p>`);
-            client.sendMessage(userId, "An OTP has been sent to your email. Please enter the OTP to verify your email:");
+                    sendMail(email, 'Quiz OTP Verification', `<p>Your OTP is: <strong>${otp}</strong></p>`);
+                    client.sendMessage(userId, 'An OTP has been sent to your email. Please enter the OTP to verify your email:');
+                } else {
+                    client.sendMessage(userId, 'Invalid email format. Please try again');
+                }
         }
         // Verify OTP
         else if (userState && userState.otp && !userState.verified) {
@@ -163,9 +174,14 @@ const initializeBot = () => {
         else if (userState && userState.verified && !userState.paymentVerified && message.hasMedia) {
             // check if payment is done
             // Search for the payment using the mobile number or userId
+            const mobileNo = userState.userId.split('@')[0].slice(2,userState.userId.length)
+            console.log(mobileNo);
             const payment = await Payment.findOne({
-                mobileNo: userState.userId.split('@')[0].slice(2,userState.userId.length), // Match with mobileNo or refId
-                status: 'captured',
+                mobileNo: mobileNo, // Match with mobileNo or refId
+                $or: [
+                    { status: 'captured' },
+                    { status: 'authorized' }
+                  ]
             });
 
             if (payment) {
@@ -219,6 +235,8 @@ const initializeBot = () => {
                 }
 
                 // Delete user state after quiz completion
+                userState.quizCompleted = true;
+                await userState.save();
             }
         }
     });
