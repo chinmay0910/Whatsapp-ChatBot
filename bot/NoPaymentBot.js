@@ -7,7 +7,6 @@ const sendMail = require('../utils/sendMail'); // Import the sendMail function
 const { PDFDocument } = require('pdf-lib');
 const { fetchQuizQuestions } = require('../controllers/questions');
 const UserQuizState = require('../models/UserQuizState');
-const Payment = require('../models/Payment');
 
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -39,7 +38,6 @@ if (fs.existsSync(filePath)) {
 function generateOtp() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
-
 
 // Helper: Validate Email
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -105,9 +103,6 @@ async function saveQuizResult(name, score, email, certId) {
     await user.save();
 }
 
-// User quiz state to track progress
-// let userQuizState = {};
-
 const initializeBot = () => {
     // Handle WhatsApp messages
     client.on('message', async (message) => {
@@ -117,12 +112,15 @@ const initializeBot = () => {
         // Check if the user has an existing state in the database
         let userState = await UserQuizState.findOne({ userId });
 
-        if(userState && userState.quizCompleted){
-            client.sendMessage(userId, "Quiz is already completed and your Certificate No is "+userState.certId);
+        if (userState && userState.quizCompleted) {
+            client.sendMessage(userId, "Quiz is already completed and your Certificate No is " + userState.certId);
             return;
         }
+
+        const quizStartTriggers = ['quiz', 'hey', 'hello', 'start', 'begin', 'hi bot', 'hey bot', 'hello bot', 'hi'];
+
         // Start quiz
-        if (message.body.toLowerCase() === 'quiz' || message.body.toLowerCase() === 'hey' || message.body.toLowerCase() === 'hello' || message.body.toLowerCase() === 'start' || message.body.toLowerCase() === 'begin' && !userState) {
+        if (quizStartTriggers.includes(message.body.toLowerCase()) && !userState) {
             userState = new UserQuizState({
                 userId,
                 name: '',
@@ -134,7 +132,6 @@ const initializeBot = () => {
                 photoPath: '',
             });
             await userState.save();
-            // console.log(userState);
 
             client.sendMessage(userId, "Welcome to the Cybersecurity Quiz! Please enter your name to begin:");
         }
@@ -147,55 +144,30 @@ const initializeBot = () => {
         // Get email and send OTP
         else if (userState && userState.name && !userState.email) {
             const email = message.body.trim();
-                if (isValidEmail(email)) {
-                    const otp = generateOtp();
-                    userState.email = email;
-                    userState.otp = otp;
-                    await userState.save();
+            if (isValidEmail(email)) {
+                const otp = generateOtp();
+                userState.email = email;
+                userState.otp = otp;
+                await userState.save();
 
-                    sendMail(email, 'Quiz OTP Verification', `<p>Your OTP is: <strong>${otp}</strong></p>`);
-                    client.sendMessage(userId, 'An OTP has been sent to your email. Please enter the OTP to verify your email:');
-                } else {
-                    client.sendMessage(userId, 'Invalid email format. Please try again');
-                }
+                sendMail(email, 'Quiz OTP Verification', `<p>Your OTP is: <strong>${otp}</strong></p>`);
+                client.sendMessage(userId, 'An OTP has been sent to your email. Please enter the OTP to verify your email:');
+            } else {
+                client.sendMessage(userId, 'Invalid email format. Please try again.');
+            }
         }
         // Verify OTP
         else if (userState && userState.otp && !userState.verified) {
             if (message.body === userState.otp) {
-                const paymentLink = "https://rzp.io/rzp/5Z2E9ty";
                 userState.verified = true;
                 await userState.save();
-                client.sendMessage(userId, `Email verified successfully! To continue, please complete the payment by clicking this link: ${paymentLink}. Once done, send the screenshot of your transaction for verification.`);
+                client.sendMessage(userId, "Email verified successfully! Please upload your profile picture for generating the completion certificate.");
             } else {
                 client.sendMessage(userId, "Invalid OTP. Please try again.");
             }
         }
-        // Receive payment
-        else if (userState && userState.verified && !userState.paymentVerified && message.hasMedia) {
-            // check if payment is done
-            // Search for the payment using the mobile number or userId
-            const mobileNo = userState.userId.split('@')[0].slice(2,userState.userId.length)
-            console.log(mobileNo);
-            const payment = await Payment.findOne({
-                mobileNo: mobileNo, // Match with mobileNo or refId
-                $or: [
-                    { status: 'captured' },
-                    { status: 'authorized' }
-                  ]
-            });
-
-            if (payment) {
-                // Payment verified, proceed with quiz
-                userState.paymentVerified = true;
-                await userState.save();
-                client.sendMessage(userId, "Payment verified! Please upload profile picture for generating completion certificate");
-              } else {
-                client.sendMessage(userId, "Payment not found. Please provide the correct payment screenshot.");
-              }
-
-        }
         // Receive photo
-        else if (userState && userState.verified && userState.paymentVerified && !userState.photoPath && message.hasMedia) {
+        else if (userState && userState.verified && !userState.photoPath && message.hasMedia) {
             const media = await message.downloadMedia();
             const photoPath = `${photosPath}${userId}_photo.jpg`;
             fs.writeFileSync(photoPath, media.data, 'base64');
@@ -204,7 +176,7 @@ const initializeBot = () => {
             client.sendMessage(userId, "Photo received! Let's start the quiz.\n" + quizQuestions[0].question + "\n" + quizQuestions[0].options);
         }
         // Handle quiz answers
-        else if (userState && userState.verified && userState.paymentVerified && userState.photoPath) {
+        else if (userState && userState.verified && userState.photoPath) {
             const currentQuestionIndex = userState.questionIndex;
             const correctAnswer = quizQuestions[currentQuestionIndex].answer;
 
@@ -253,6 +225,5 @@ const initializeBot = () => {
 
     client.initialize();
 };
-
 
 module.exports = initializeBot;

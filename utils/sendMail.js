@@ -5,7 +5,7 @@ const sendMail = (receiver, subject, body) => {
     // create reusable transporter
     let transporter = nodemailer.createTransport({
         service: 'gmail',
-        host: "smtp.example.com",
+        host: "smtp.gmail.com",
         port: 587,
         secure: false, // use TLS
         auth: {

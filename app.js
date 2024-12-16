@@ -1,6 +1,6 @@
 const express = require('express');
 const connectToMongo = require('./db')
-const initializeBot = require('./bot/quizBot');
+const initializeBot = require('./bot/NoPaymentBot');
 const questionRoutes = require('./routes/questionRoutes');
 const UserQuizState = require('./models/UserQuizState');
 const Payment = require('./models/Payment');
@@ -83,6 +83,6 @@ app.get('/', async (req, res) => {
 
 
 // Initialize WhatsApp Bot
-// initializeBot();
+initializeBot();
 
 app.listen(3000, () => console.log('API server running on http://localhost:3000'));
