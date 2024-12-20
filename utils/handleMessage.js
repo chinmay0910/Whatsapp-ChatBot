@@ -116,7 +116,8 @@ async function saveQuizResult(name, score, email, certId) {
 }
 
 // Handle Twilio incoming messages
-async function handleTwilioMessage(client, sender, message) {
+async function handleTwilioMessage(client, sender, messageBody) {
+    const message = messageBody.Body;
     const quizQuestions = await fetchQuizQuestions();
     let userState = await UserQuizState.findOne({ userId: sender });
 
@@ -177,7 +178,7 @@ async function handleTwilioMessage(client, sender, message) {
             await sendWhatsAppMessage(client, sender, 'Invalid OTP. Please try again.');
         }
     }
-    else if (userState && userState.verified && !userState.photoPath && message.MediaUrl0) {
+    else if (userState && userState.verified && !userState.photoPath && messageBody.MediaUrl0) {
         const mediaUrl = message.MediaUrl0;
         const imagePath = path.join(photosPath, `${sender}_photo.jpg`);
 

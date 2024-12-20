@@ -93,9 +93,9 @@ const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
 
 app.post('/twilioDemo', async (req, res)=>{
   const sender = req.body.From; // Sender's phone number
-  const message = req.body.Body; // Incoming message text
+  const message = req.body; // Incoming message text
 
-  console.log(`Message received from ${sender}: ${message}`);
+  console.log(`Message received from ${sender}: ${message.Body}`);
 
   handleTwilioMessage(twilioClient, sender, message);
 
