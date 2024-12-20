@@ -17,7 +17,6 @@ app.set('views', path.join(__dirname, 'templates'));
 
 app.use(express.urlencoded({ extended: true }));
 
-
 // Connect to MongoDB
 connectToMongo();
 
@@ -89,6 +88,7 @@ app.post('/twilioDemo',(req, res)=>{
   const message = req.body.Body; // Incoming message text
 
   console.log(`Message received from ${sender}: ${message}`);
+  console.log(`body: ${JSON.stringify(req.body)}`);
   
 
   res.status(200).send('Message sent');
