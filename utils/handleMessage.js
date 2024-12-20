@@ -90,7 +90,7 @@ async function sendWhatsAppMessage(twilioClient, to, body) {
 }
 
 // Send certificate via Twilio WhatsApp
-async function sendCertificate(userId, name, score, photoPath) {
+async function sendCertificate(twilioClient, userId, name, score, photoPath) {
     const { certificateFilePath, certId } = await generateCertificate(userId, name, score, photoPath);
     // const mediaUrl = `https://whatsapp-chatbot-em4i.onrender.com/uploads/certificates/${userId}_certificate.pdf`; // Update with your server URL
     const mediaUrl = certificateFilePath; // Update with your server URL
@@ -223,7 +223,7 @@ async function handleTwilioMessage(client, sender, messageBody) {
             const email = userState.email;
 
             await sendWhatsAppMessage(client, sender, `Quiz complete! Your score: ${finalScore}/${quizQuestions.length}`);
-            const certId = await sendCertificate(sender, name, finalScore, userState.photoPath);
+            const certId = await sendCertificate(client, sender, name, finalScore, userState.photoPath);
             if (certId) {
                 saveQuizResult(name, finalScore, email, certId);
             }
