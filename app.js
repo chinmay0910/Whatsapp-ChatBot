@@ -82,7 +82,7 @@ app.get('/', async (req, res) => {
 });
 
 app.post('/twilioDemo',(req, res)=>{
-  console.log(req.body);
+  console.log(req);
   
 
   res.status(200).send('Message sent');
