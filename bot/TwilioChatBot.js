@@ -1,5 +1,4 @@
-const qrcode = require('qrcode-terminal');
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const twilio = require('twilio');
 const xlsx = require('xlsx');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -8,9 +7,11 @@ const { PDFDocument } = require('pdf-lib');
 const { fetchQuizQuestions } = require('../controllers/questions');
 const UserQuizState = require('../models/UserQuizState');
 
-const client = new Client({
-    authStrategy: new LocalAuth()
-});
+// Twilio configuration
+const twilioAccountSid = process.env.TwilioAccountSid;
+const twilioAuthToken = process.env.TwilioAuthToken;
+const twilioPhoneNumber = process.env.TwilioPhoneNumber;
+const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
 
 // Directory for storing certificates and temporary photos
 const certificatesPath = './uploads/certificates/';
@@ -82,12 +83,13 @@ async function generateCertificate(userId, name, score, photoPath) {
     return { certificateFilePath, certId };
 }
 
-// Send certificate on WhatsApp
+// Send certificate via Twilio
 async function sendCertificate(userId, name, score, photoPath) {
     const { certificateFilePath, certId } = await generateCertificate(userId, name, score, photoPath);
-    const media = MessageMedia.fromFilePath(certificateFilePath);
-    await client.sendMessage(userId, media, {
-        caption: `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`
+    await twilioClient.messages.create({
+        body: `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`,
+        from: twilioPhoneNumber,
+        to: userId
     });
     return certId;
 }
@@ -104,7 +106,7 @@ async function saveQuizResult(name, score, email, certId) {
 }
 
 const initializeBot = () => {
-    // Handle WhatsApp messages
+    // Handle incoming messages
     client.on('message', async (message) => {
         const userId = message.from;
         const quizQuestions = await fetchQuizQuestions();
@@ -112,19 +114,12 @@ const initializeBot = () => {
         // Check if the user has an existing state in the database
         let userState = await UserQuizState.findOne({ userId });
 
-        // Handle 'restart' command
-        if (message.body.toLowerCase() === 'restart') {
-            if (userState) {
-                await UserQuizState.deleteOne({ userId }); // Delete the user's quiz state
-                client.sendMessage(userId, 'Your quiz has been restarted. Type "quiz" or "start" to begin again.');
-            } else {
-                client.sendMessage(userId, 'You are not currently taking a quiz. Type "quiz" or "start" to begin.');
-            }
-            return; // Exit early after handling restart
-        }
-
         if (userState && userState.quizCompleted) {
-            client.sendMessage(userId, "Quiz is already completed and your Certificate No is " + userState.certId);
+            await twilioClient.messages.create({
+                body: "Quiz is already completed and your Certificate No is " + userState.certId,
+                from: twilioPhoneNumber,
+                to: userId
+            });
             return;
         }
 
@@ -144,13 +139,21 @@ const initializeBot = () => {
             });
             await userState.save();
 
-            client.sendMessage(userId, "Welcome to the Cybersecurity Quiz! Please enter your name to begin:");
+            await twilioClient.messages.create({
+                body: "Welcome to the Cybersecurity Quiz! Please enter your name to begin:",
+                from: twilioPhoneNumber,
+                to: userId
+            });
         }
         // Get name
         else if (userState && !userState.name) {
             userState.name = message.body.trim();
             await userState.save();
-            client.sendMessage(userId, "Thank you! Please enter your email address for verification:");
+            await twilioClient.messages.create({
+                body: "Thank you! Please enter your email address for verification:",
+                from: twilioPhoneNumber,
+                to: userId
+            });
         }
         // Get email and send OTP
         else if (userState && userState.name && !userState.email) {
@@ -162,9 +165,17 @@ const initializeBot = () => {
                 await userState.save();
 
                 sendMail(email, 'Quiz OTP Verification', `<p>Your OTP is: <strong>${otp}</strong></p>`);
-                client.sendMessage(userId, 'An OTP has been sent to your email. Please enter the OTP to verify your email:');
+                await twilioClient.messages.create({
+                    body: 'An OTP has been sent to your email. Please enter the OTP to verify your email:',
+                    from: twilioPhoneNumber,
+                    to: userId
+                });
             } else {
-                client.sendMessage(userId, 'Invalid email format. Please try again.');
+                await twilioClient.messages.create({
+                    body: 'Invalid email format. Please try again.',
+                    from: twilioPhoneNumber,
+                    to: userId
+                });
             }
         }
         // Verify OTP
@@ -172,9 +183,17 @@ const initializeBot = () => {
             if (message.body === userState.otp) {
                 userState.verified = true;
                 await userState.save();
-                client.sendMessage(userId, "Email verified successfully! Please upload your profile picture for generating the completion certificate.");
+                await twilioClient.messages.create({
+                    body: "Email verified successfully! Please upload your profile picture for generating the completion certificate.",
+                    from: twilioPhoneNumber,
+                    to: userId
+                });
             } else {
-                client.sendMessage(userId, "Invalid OTP. Please try again.");
+                await twilioClient.messages.create({
+                    body: "Invalid OTP. Please try again.",
+                    from: twilioPhoneNumber,
+                    to: userId
+                });
             }
         }
         // Receive photo
@@ -184,7 +203,11 @@ const initializeBot = () => {
             fs.writeFileSync(photoPath, media.data, 'base64');
             userState.photoPath = photoPath;
             await userState.save();
-            client.sendMessage(userId, "Photo received! Let's start the quiz.\n" + quizQuestions[0].question + "\n" + quizQuestions[0].options);
+            await twilioClient.messages.create({
+                body: `Photo received! Let's start the quiz.\n${quizQuestions[0].question}\n${quizQuestions[0].options}`,
+                from: twilioPhoneNumber,
+                to: userId
+            });
         }
         // Handle quiz answers
         else if (userState && userState.verified && userState.photoPath) {
@@ -198,43 +221,28 @@ const initializeBot = () => {
 
             userState.questionIndex++;
 
-            // Save updated state
-            await userState.save();
-
-            // Send next question or complete quiz
-            if (userState.questionIndex < quizQuestions.length) {
-                const nextQuestionIndex = userState.questionIndex;
-                client.sendMessage(userId, quizQuestions[nextQuestionIndex].question + "\n" + quizQuestions[nextQuestionIndex].options);
-            } else {
-                // Quiz complete, generate and send certificate
-                const finalScore = userState.score;
-                const name = userState.name;
-                const email = userState.email;
-
-                client.sendMessage(userId, `Quiz complete! Your score: ${finalScore}/${quizQuestions.length}`);
-                const certId = await sendCertificate(userId, name, finalScore, userState.photoPath);
-                if (certId) {
-                    saveQuizResult(name, finalScore, email, certId);
-                }
-
-                // Delete user state after quiz completion
+            // End quiz
+            if (userState.questionIndex >= quizQuestions.length) {
                 userState.quizCompleted = true;
                 await userState.save();
+
+                const certId = await sendCertificate(userId, userState.name, userState.score, userState.photoPath);
+                await saveQuizResult(userState.name, userState.score, userState.email, certId);
+
+                await twilioClient.messages.create({
+                    body: `Quiz completed!\nYour certificate has been sent to you via SMS.\nYour Certificate No: ${certId}`,
+                    from: twilioPhoneNumber,
+                    to: userId
+                });
+            } else {
+                await twilioClient.messages.create({
+                    body: `${quizQuestions[userState.questionIndex].question}\n${quizQuestions[userState.questionIndex].options}`,
+                    from: twilioPhoneNumber,
+                    to: userId
+                });
             }
         }
     });
-
-    // WhatsApp client initialization
-    client.on('qr', (qr) => {
-        qrcode.generate(qr, { small: true });
-        console.log('Scan this QR code to log in to WhatsApp.');
-    });
-
-    client.on('ready', () => {
-        console.log('WhatsApp client is ready.');
-    });
-
-    client.initialize();
 };
 
 module.exports = initializeBot;

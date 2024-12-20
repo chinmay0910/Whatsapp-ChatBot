@@ -1,6 +1,8 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+const smtpTransport = require("nodemailer-smtp-transport");
+
 const sendMail = (receiver, subject, body) => {
     // create reusable transporter
     let transporter = nodemailer.createTransport({
@@ -11,9 +13,6 @@ const sendMail = (receiver, subject, body) => {
         auth: {
             user: process.env.USER,
             pass: process.env.APP_PASS
-        },
-        tls: {
-            rejectUnauthorized: false  // Ignore self-signed certificate errors
         }
     });
 

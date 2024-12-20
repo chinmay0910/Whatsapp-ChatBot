@@ -81,6 +81,12 @@ app.get('/', async (req, res) => {
     res.render('index');  // This will render templates/index.ejs
 });
 
+app.post('/twilioDemo',(req, res)=>{
+  console.log(req.body);
+  
+
+  res.status(200).send('Message sent');
+})
 
 // Initialize WhatsApp Bot
 // initializeBot();
