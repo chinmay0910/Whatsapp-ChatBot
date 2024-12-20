@@ -5,7 +5,8 @@ const initializeBot = require('./bot/NoPaymentBot');
 const questionRoutes = require('./routes/questionRoutes');
 const UserQuizState = require('./models/UserQuizState');
 const Payment = require('./models/Payment');
-const path = require('path')
+const path = require('path');
+const handleTwilioMessage = require('./utils/handleMessage');
 
 const app = express();
 
@@ -87,7 +88,7 @@ app.get('/', async (req, res) => {
 
 const twilioAccountSid = process.env.TwilioAccountSid;
 const twilioAuthToken = process.env.TwilioAuthToken;
-const twilioPhoneNumber = process.env.TwilioPhoneNumber;
+// const twilioPhoneNumber = process.env.TwilioPhoneNumber;
 const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
 
 app.post('/twilioDemo', async (req, res)=>{
@@ -95,14 +96,8 @@ app.post('/twilioDemo', async (req, res)=>{
   const message = req.body.Body; // Incoming message text
 
   console.log(`Message received from ${sender}: ${message}`);
-  console.log(`body: ${JSON.stringify(req.body)}`);
 
-  await twilioClient.messages.create({
-    body: "Welcome to the Cybersecurity Quiz! Please enter your name to begin:",
-    from: twilioPhoneNumber,
-    to: sender
-});
-  
+  handleTwilioMessage(twilioClient, sender, message);
 
   res.status(200).send('Message sent');
 })
