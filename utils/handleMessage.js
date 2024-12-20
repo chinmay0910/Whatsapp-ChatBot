@@ -186,7 +186,14 @@ async function handleTwilioMessage(client, sender, messageBody) {
         const imagePath = path.join(photosPath, `${sender}_photo.jpg`);
 
         // Download the image
-        const imageBuffer = await axios.get(mediaUrl, { responseType: 'arraybuffer' });
+        const imageBuffer = await await axios.get(mediaUrl, {
+            responseType: 'arraybuffer',
+            headers: {
+                // Include authorization header if required
+                Authorization: `Bearer ${process.env.TwilioAuthToken}`
+            }
+        });
+
         console.log(imageBuffer);
         
         fs.writeFileSync(imagePath, imageBuffer.data);
