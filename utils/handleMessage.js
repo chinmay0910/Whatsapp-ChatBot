@@ -180,7 +180,7 @@ async function handleTwilioMessage(client, sender, messageBody) {
         }
     }
     else if (userState && userState.verified && !userState.photoPath && messageBody.MediaUrl0) {
-        const mediaUrl = message.MediaUrl0;
+        const mediaUrl = messageBody.MediaUrl0;
         const imagePath = path.join(photosPath, `${sender}_photo.jpg`);
 
         // Download the image
