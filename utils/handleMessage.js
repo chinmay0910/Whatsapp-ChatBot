@@ -92,8 +92,8 @@ async function sendWhatsAppMessage(twilioClient, to, body) {
 // Send certificate via Twilio WhatsApp
 async function sendCertificate(twilioClient, userId, name, score, photoPath) {
     const { certificateFilePath, certId } = await generateCertificate(userId, name, score, photoPath);
-    const mediaUrl = `https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf`; // Update with your server URL
-    // const mediaUrl = certificateFilePath; // Update with your server URL
+    // const mediaUrl = `https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf`; // Update with your server URL
+    const mediaUrl = "https://whatsapp-chatbot-em4i.onrender.com"+certificateFilePath; // Update with your server URL
 
     await twilioClient.messages.create({
         body: `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`,
