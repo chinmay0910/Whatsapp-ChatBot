@@ -185,6 +185,8 @@ async function handleTwilioMessage(client, sender, messageBody) {
 
         // Download the image
         const imageBuffer = await axios.get(mediaUrl, { responseType: 'arraybuffer' });
+        console.log(imageBuffer);
+        
         fs.writeFileSync(imagePath, imageBuffer.data);
 
         // Save this image path to the user state or database if necessary
