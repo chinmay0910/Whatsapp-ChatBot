@@ -201,7 +201,7 @@ async function handleTwilioMessage(client, sender, messageBody) {
         userState.photoPath = imagePath;
         await userState.save();
 
-        client.sendMessage(userId, "Photo received! Let's start the quiz.\n" + quizQuestions[0].question + "\n" + quizQuestions[0].options);
+        await sendWhatsAppMessage(client, sender, "Photo received! Let's start the quiz.\n" + quizQuestions[0].question + "\n" + quizQuestions[0].options);
     }
     else if (userState && userState.verified && userState.photoPath && message) {
         const currentQuestionIndex = userState.questionIndex;
