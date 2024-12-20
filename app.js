@@ -82,7 +82,10 @@ app.get('/', async (req, res) => {
 });
 
 app.post('/twilioDemo',(req, res)=>{
-  console.log(req);
+  const sender = req.body.From; // Sender's phone number
+  const message = req.body.Body; // Incoming message text
+
+  console.log(`Message received from ${sender}: ${message}`);
   
 
   res.status(200).send('Message sent');
