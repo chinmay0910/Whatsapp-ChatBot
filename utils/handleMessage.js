@@ -6,6 +6,7 @@ const { PDFDocument } = require('pdf-lib');
 const { fetchQuizQuestions } = require('../controllers/questions');
 const UserQuizState = require('../models/UserQuizState');
 const axios = require('axios');
+const path = require('path');
 
 const twilioPhoneNumber = process.env.TwilioPhoneNumber;
 
