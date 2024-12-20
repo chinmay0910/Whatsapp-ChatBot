@@ -83,12 +83,24 @@ app.get('/', async (req, res) => {
     res.render('index');  // This will render templates/index.ejs
 });
 
-app.post('/twilioDemo',(req, res)=>{
+
+const twilioAccountSid = process.env.TwilioAccountSid;
+const twilioAuthToken = process.env.TwilioAuthToken;
+const twilioPhoneNumber = process.env.TwilioPhoneNumber;
+const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
+
+app.post('/twilioDemo', async (req, res)=>{
   const sender = req.body.From; // Sender's phone number
   const message = req.body.Body; // Incoming message text
 
   console.log(`Message received from ${sender}: ${message}`);
   console.log(`body: ${JSON.stringify(req.body)}`);
+
+  await twilioClient.messages.create({
+    body: "Welcome to the Cybersecurity Quiz! Please enter your name to begin:",
+    from: twilioPhoneNumber,
+    to: sender
+});
   
 
   res.status(200).send('Message sent');
