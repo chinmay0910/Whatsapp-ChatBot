@@ -85,18 +85,20 @@ async function sendWhatsAppMessage(to, body, mediaURL = null) {
     const data = {
         messaging_product: 'whatsapp',
         to,
-        text: {
-            body
-        }
     };
 
     if (mediaURL) {
         data.type = 'document' // or 'document' for PDFs
         data.document = {
             link: mediaURL,
+            caption: body
         };
+    }else{
+        document.text ={
+            body
+        }
     }
-    console.log("Data>> "+JSON.stringify(data));
+    console.log("Data>> "+JSON.stringify(data)+" MediaUrl>> "+mediaURL);
     
     try {
         await axios.post(`https://graph.facebook.com/v14.0/${PHONE_NUMBER_ID}/messages`, data, {
