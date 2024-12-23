@@ -199,21 +199,21 @@ async function sendImgDownload(mediaURL, mediaMimeType, id) {
 
 async function uploadMedia(filePath, mimeType) {
     try {
-        const url = `https://graph.facebook.com/v14.0/${PHONE_NUMBER_ID}/media`;
+        const url = `https://graph.facebook.com/v1/media`;
         const fileStream = fs.createReadStream(filePath);
 
-        const formData = new FormData();
-        formData.append('file', fileStream);
-        formData.append('type', mimeType);
+        const stats = fs.statSync(filePath);
+        const fileSizeInBytes = stats.size;
 
-        const response = await axios.post(url, formData, {
+        const response = await axios.post(url, fileStream, {
             headers: {
-                Authorization: `Bearer ${Auth_token}`,
-                // ...formData.getHeaders(),
+                'Authorization': `Bearer ${Auth_token}`,
+                'Content-Type': mimeType,
+                'Content-Length': fileSizeInBytes,
             },
         });
 
-        return response.data.id; // media_id
+        return response.data.id; // Assuming the response contains the media ID
     } catch (error) {
         console.error('Error uploading media:', error.message);
         throw error;
