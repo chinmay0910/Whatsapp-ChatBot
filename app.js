@@ -155,61 +155,56 @@ app.get("/webhook", (req, res) => {
 
 // Main webhook handler
 app.post('/webhook', async (req, res) => {
-  console.log('Incoming Webhook Payload:', JSON.stringify(req.body, null, 2));
-  const { entry } = req.body;
-
-  // Validate webhook body structure
-  if (!entry || !Array.isArray(entry) || entry.length === 0) {
-    console.error('Invalid payload: Missing entry');
-    return res.sendStatus(400); // Bad Request if the body is not as expected
-  }
-
-  const changes = entry[0].changes;
-  if (!changes || changes.length === 0) {
-    console.error('Invalid payload: Missing changes');
-    return res.sendStatus(404); // Not Found if no changes are detected
-  }
-
-  const value = changes[0].value;
-  const messageData = value.messages;
-  if (!messageData || messageData.length === 0) {
-    console.error('Invalid payload: Missing message data');
-    return res.sendStatus(404); // Not Found if no message data
-  }
-
-  const message = messageData[0];
-  const phoneNumberId = value.metadata.phone_number_id;
-  const from = message.from;
-  const msg = message.text ? message.text.body : '';
-  console.log("message>> "+JSON.stringify(message));
-  
-  // Send a reply to the user
   try {
-  // Log the incoming message for debugging
-  console.log(`Received message from ${from}: ${msg}`);
+    console.log('Incoming Webhook Payload:', JSON.stringify(req.body, null, 2));
 
-    console.log("messageType: "+message.type);
-    
-    // await sendMessage(phoneNumberId, from, "Hi.. I'm Chinmay");
-    if(message?.type == "text"){
-      console.log("Hi am i am in text");
-      handleIncomingMessage(from, msg, null);
-    }else if(message?.type == "image"){
-      console.log("Hi am i am in image");
-      handleIncomingMessage(from, msg, message?.image);
+    const entry = req.body?.entry?.[0];
+    if (!entry) {
+      console.error('Invalid payload: Missing entry');
+      return res.status(400).send({ error: 'Invalid payload: Missing entry' });
     }
 
-    
-    if (!msg) {
-      console.error('Invalid payload: Missing message text');
-      return res.sendStatus(400); // Bad Request if the message text is missing
+    const changes = entry.changes?.[0];
+    if (!changes) {
+      console.error('Invalid payload: Missing changes');
+      return res.status(404).send({ error: 'Invalid payload: Missing changes' });
     }
 
-    res.sendStatus(200); // Success, message sent
+    const value = changes.value;
+    const messageData = value.messages?.[0];
+    if (!messageData) {
+      console.error('Invalid payload: Missing message data');
+      return res.status(404).send({ error: 'Invalid payload: Missing message data' });
+    }
+
+    const phoneNumberId = value.metadata?.phone_number_id;
+    const from = messageData.from;
+    const msg = messageData.text?.body || '';
+    const messageType = messageData.type;
+
+    console.log(`Received message from ${from}: ${msg}`);
+    console.log(`Message Type: ${messageType}`);
+
+    // Handle message based on type
+    switch (messageType) {
+      case 'text':
+        console.log('Processing text message');
+        handleIncomingMessage(from, msg, null);
+        break;
+      case 'image':
+        console.log('Processing image message');
+        handleIncomingMessage(from, msg, messageData.image);
+        break;
+      default:
+        console.log(`Unsupported message type: ${messageType}`);
+    }
+
+    res.status(200).send({ success: true, message: 'Webhook processed successfully' });
   } catch (error) {
     console.error('Error handling webhook:', error.message);
-    res.sendStatus(500); // Internal Server Error if something goes wrong
+    res.status(500).send({ error: 'Internal Server Error', details: error.message });
   }
 });
+
 
 app.listen(3000, () => console.log('API server running on http://localhost:3000'));
