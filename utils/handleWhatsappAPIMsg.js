@@ -209,7 +209,7 @@ async function uploadMedia(filePath, mimeType) {
         const response = await axios.post(url, formData, {
             headers: {
                 Authorization: `Bearer ${Auth_token}`,
-                ...formData.getHeaders(),
+                // ...formData.getHeaders(),
             },
         });
 
