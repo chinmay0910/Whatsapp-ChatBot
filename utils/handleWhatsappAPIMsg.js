@@ -115,7 +115,8 @@ async function sendWhatsAppMessage(to, body, mediaURL = null) {
 // Send certificate via WhatsApp
 async function sendCertificate(userId, name, score, photoPath) {
     const { certificateFilePath, certId } = await generateCertificate(userId, name, score, photoPath);
-    const mediaUrl = path.join("https://whatsapp-chatbot-em4i.onrender.com", certificateFilePath); // Update with your server URL
+    certificateFilePath = certificateFilePath.substring(2);
+    const mediaUrl = `${serverUrl}/${certificateFilePath}`; // Update with your server URL
     // const mediaId = await uploadMedia(certificateFilePath, 'application/pdf');
     await sendWhatsAppMessage(userId, `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`, mediaUrl);
 
