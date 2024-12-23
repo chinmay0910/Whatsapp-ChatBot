@@ -130,14 +130,13 @@ app.get("/webhook", (req, res) => {
 });
 
 // Function to handle sending a reply to a user
-const sendMessage = async (phoneNumberId, from, text) => {
+const sendMessage = async (phoneNumberId, to, text) => {
   try {
-    const phoneNumberId = "123456123";
     const response = await axios.post(
       `https://graph.facebook.com/v13.0/${phoneNumberId}/messages?access_token=${ACCESS_TOKEN}`,
       {
         messaging_product: 'whatsapp',
-        to: from,
+        to: to,
         text: { body: text },
       },
       {
@@ -146,36 +145,30 @@ const sendMessage = async (phoneNumberId, from, text) => {
     );
     console.log('Message sent:', response.data);
   } catch (error) {
-    console.error('Error sending message:', error);
+    console.error('Error sending message:', error.response?.data || error.message || error);
     throw new Error('Failed to send message');
   }
 };
 
 // Main webhook handler
 app.post('/webhook', async (req, res) => {
-  const { entry } = req.body;
+  const { field, value } = req.body;
 
-  // Validate webhook body structure
-  if (!entry || !Array.isArray(entry) || entry.length === 0) {
-    return res.sendStatus(400); // Bad Request if the body is not as expected
+  if (field !== 'messages' || !value) {
+    return res.sendStatus(400); // Bad Request if the field is not "messages" or value is missing
   }
 
-  const changes = entry[0].changes;
-  if (!changes || changes.length === 0) {
-    return res.sendStatus(404); // Not Found if no changes are detected
+  const { messaging_product, metadata, messages, contacts } = value;
+
+  if (!metadata || !messages || messages.length === 0) {
+    return res.sendStatus(404); // Not Found if necessary data is missing
   }
 
-  const messageData = changes[0].value.messages;
-  if (!messageData || messageData.length === 0) {
-    return res.sendStatus(404); // Not Found if no message data
-  }
-
-  const message = messageData[0];
-  const { phone_number_id: phoneNumberId, metadata } = changes[0].value;
+  const phoneNumberId = metadata.phone_number_id;
+  const message = messages[0];
   const from = message.from;
-  const msg = message.text ? message.text.body : '';
+  const msg = message.text?.body || '';
 
-  // Log the incoming message for debugging
   console.log(`Received message from ${from}: ${msg}`);
 
   if (!msg) {
@@ -187,8 +180,10 @@ app.post('/webhook', async (req, res) => {
     await sendMessage(phoneNumberId, from, 'Hi.. I\'m Prasath');
     res.sendStatus(200); // Success, message sent
   } catch (error) {
+    console.error('Error while sending reply:', error.response?.data || error.message);
     res.sendStatus(500); // Internal Server Error if something goes wrong
   }
 });
+
 
 app.listen(3000, () => console.log('API server running on http://localhost:3000'));
