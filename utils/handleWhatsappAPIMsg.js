@@ -81,7 +81,7 @@ async function generateCertificate(userId, name, score, photoPath) {
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_ID;
 const Auth_token = process.env.WHATSAPP_API_TOKEN;
 // Send message via WhatsApp Business API
-async function sendWhatsAppMessage(to, body, mediaUrl = null) {
+async function sendWhatsAppMessage(to, body, mediaID = null) {
     const data = {
         messaging_product: 'whatsapp',
         to,
@@ -90,10 +90,10 @@ async function sendWhatsAppMessage(to, body, mediaUrl = null) {
         }
     };
 
-    if (mediaUrl) {
-        data.media = {
-            url: mediaUrl,
-            type: 'image' // or 'document' for PDFs
+    if (mediaID) {
+        data.type = 'document' // or 'document' for PDFs
+        data.document = {
+            id: mediaID,
         };
     }
 
@@ -113,8 +113,8 @@ async function sendWhatsAppMessage(to, body, mediaUrl = null) {
 async function sendCertificate(userId, name, score, photoPath) {
     const { certificateFilePath, certId } = await generateCertificate(userId, name, score, photoPath);
     const mediaUrl = `https://whatsapp-chatbot-em4i.onrender.com${certificateFilePath}`; // Update with your server URL
-
-    await sendWhatsAppMessage(userId, `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`, mediaUrl);
+    const mediaId = await uploadMedia(mediaUrl, 'application/pdf');
+    await sendWhatsAppMessage(userId, `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`, mediaId);
 
     return certId;
 }
@@ -194,6 +194,29 @@ async function sendImgDownload(mediaURL, mediaMimeType, id) {
         }
     } catch (error) {
         console.error("Error downloading media:", error.message);
+    }
+}
+
+async function uploadMedia(filePath, mimeType) {
+    try {
+        const url = `https://graph.facebook.com/v14.0/${PHONE_NUMBER_ID}/media`;
+        const fileStream = fs.createReadStream(filePath);
+
+        const formData = new FormData();
+        formData.append('file', fileStream);
+        formData.append('type', mimeType);
+
+        const response = await axios.post(url, formData, {
+            headers: {
+                Authorization: `Bearer ${Auth_token}`,
+                ...formData.getHeaders(),
+            },
+        });
+
+        return response.data.id; // media_id
+    } catch (error) {
+        console.error('Error uploading media:', error.message);
+        throw error;
     }
 }
 
