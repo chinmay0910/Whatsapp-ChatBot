@@ -132,6 +132,7 @@ app.get("/webhook", (req, res) => {
 // Function to handle sending a reply to a user
 const sendMessage = async (phoneNumberId, from, text) => {
   try {
+    const phoneNumberId = "123456123";
     const response = await axios.post(
       `https://graph.facebook.com/v13.0/${phoneNumberId}/messages?access_token=${ACCESS_TOKEN}`,
       {
