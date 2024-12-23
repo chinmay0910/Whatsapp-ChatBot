@@ -7,12 +7,13 @@ const UserQuizState = require('./models/UserQuizState');
 const Payment = require('./models/Payment');
 const path = require('path');
 const handleTwilioMessage = require('./utils/handleMessage');
+const axios = require('axios');
 
 const app = express();
 
 app.use(express.json());
 
-
+const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 // Set EJS as the view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'templates'));
@@ -105,5 +106,85 @@ app.post('/twilioDemo', async (req, res)=>{
 
 // Initialize WhatsApp Bot
 // initializeBot();
+
+// Direct Business API integration
+app.get("/webhook", (req, res) => {
+  let mode = req.query["hub.mode"];
+  let challenge = req.query["hub.challenge"];
+  let token = req.query["hub.verify_token"];
+
+  const mytoken = process.env.MYTOKEN; // Your verification token
+
+  if (mode && token) {
+    if (mode === "subcribe" && token === mytoken) {
+      res.status(200).send(challenge); // Respond with the challenge
+    } else {
+      res.status(403).send('Forbidden'); // Respond with a 403 if token doesn't match
+    }
+  } else {
+    res.status(400).send('Bad Request'); // Respond with a 400 if mode or token is missing
+  }
+});
+
+// Function to handle sending a reply to a user
+const sendMessage = async (phoneNumberId, from, text) => {
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/v13.0/${phoneNumberId}/messages?access_token=${ACCESS_TOKEN}`,
+      {
+        messaging_product: 'whatsapp',
+        to: from,
+        text: { body: text },
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+    console.log('Message sent:', response.data);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    throw new Error('Failed to send message');
+  }
+};
+
+// Main webhook handler
+app.post('/webhook', async (req, res) => {
+  const { entry } = req.body;
+
+  // Validate webhook body structure
+  if (!entry || !Array.isArray(entry) || entry.length === 0) {
+    return res.sendStatus(400); // Bad Request if the body is not as expected
+  }
+
+  const changes = entry[0].changes;
+  if (!changes || changes.length === 0) {
+    return res.sendStatus(404); // Not Found if no changes are detected
+  }
+
+  const messageData = changes[0].value.messages;
+  if (!messageData || messageData.length === 0) {
+    return res.sendStatus(404); // Not Found if no message data
+  }
+
+  const message = messageData[0];
+  const { phone_number_id: phoneNumberId, metadata } = changes[0].value;
+  const from = message.from;
+  const msg = message.text ? message.text.body : '';
+
+  // Log the incoming message for debugging
+  console.log(`Received message from ${from}: ${msg}`);
+
+  if (!msg) {
+    return res.sendStatus(400); // Bad Request if the message text is missing
+  }
+
+  // Send a reply to the user
+  try {
+    await sendMessage(phoneNumberId, from, 'Hi.. I\'m Prasath');
+    res.sendStatus(200); // Success, message sent
+  } catch (error) {
+    res.sendStatus(500); // Internal Server Error if something goes wrong
+  }
+});
 
 app.listen(3000, () => console.log('API server running on http://localhost:3000'));
