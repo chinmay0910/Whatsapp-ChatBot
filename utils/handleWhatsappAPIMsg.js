@@ -152,7 +152,7 @@ async function sendGetRequest(id) {
             console.log(" Response from Graph V.18 - image: " + mediaURL);
             console.log(" Mime type: " + mediaMimeType);
 
-            return sendImgDownload(mediaURL, mediaMimeType, id);
+            return await sendImgDownload(mediaURL, mediaMimeType, id);
         } else {
             console.log("Unexpected response format:", response.data);
         }
@@ -268,7 +268,7 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
         const mediaID = imageData.id;
         console.log(mediaID);
         
-        const imagePath = sendGetRequest(mediaID);
+        const imagePath = await sendGetRequest(mediaID);
 
         // Save this image path to the user state or database if necessary
         const userState = await UserQuizState.findOne({ userId: sender });
