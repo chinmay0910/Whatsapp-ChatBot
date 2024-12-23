@@ -9,7 +9,7 @@ const axios = require('axios');
 const path = require('path');
 
 // Directory for storing certificates and temporary photos
-const certificatesPath = './uploads/certificates/';
+const certificatesPath = '/uploads/certificates/';
 const photosPath = './uploads/photos/';
 if (!fs.existsSync(certificatesPath)) {
     fs.mkdirSync(certificatesPath);
