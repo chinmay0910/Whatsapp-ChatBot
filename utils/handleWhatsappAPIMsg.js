@@ -94,7 +94,7 @@ async function sendWhatsAppMessage(to, body, mediaURL = null) {
             caption: body
         };
     }else{
-        document.text ={
+        data.text ={
             body
         }
     }
