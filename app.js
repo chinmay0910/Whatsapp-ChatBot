@@ -133,19 +133,22 @@ app.get("/webhook", (req, res) => {
 const sendMessage = async (phoneNumberId, from, text) => {
   try {
     const response = await axios.post(
-      `https://graph.facebook.com/v13.0/${phoneNumberId}/messages?access_token=${ACCESS_TOKEN}`,
+      `https://graph.facebook.com/v13.0/${phoneNumberId}/messages`,
       {
         messaging_product: 'whatsapp',
         to: from,
         text: { body: text },
       },
       {
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${ACCESS_TOKEN}`, // Include bearer token in the header
+        },
       }
     );
     console.log('Message sent:', response.data);
   } catch (error) {
-    console.error('Error sending message:', error);
+    console.error('Error sending message:', error.response?.data || error.message);
     throw new Error('Failed to send message');
   }
 };
@@ -157,21 +160,25 @@ app.post('/webhook', async (req, res) => {
 
   // Validate webhook body structure
   if (!entry || !Array.isArray(entry) || entry.length === 0) {
+    console.error('Invalid payload: Missing entry');
     return res.sendStatus(400); // Bad Request if the body is not as expected
   }
 
   const changes = entry[0].changes;
   if (!changes || changes.length === 0) {
+    console.error('Invalid payload: Missing changes');
     return res.sendStatus(404); // Not Found if no changes are detected
   }
 
-  const messageData = changes[0].value.messages;
+  const value = changes[0].value;
+  const messageData = value.messages;
   if (!messageData || messageData.length === 0) {
+    console.error('Invalid payload: Missing message data');
     return res.sendStatus(404); // Not Found if no message data
   }
 
   const message = messageData[0];
-  const { phone_number_id: phoneNumberId, metadata } = changes[0].value;
+  const phoneNumberId = value.metadata.phone_number_id;
   const from = message.from;
   const msg = message.text ? message.text.body : '';
 
@@ -179,14 +186,16 @@ app.post('/webhook', async (req, res) => {
   console.log(`Received message from ${from}: ${msg}`);
 
   if (!msg) {
+    console.error('Invalid payload: Missing message text');
     return res.sendStatus(400); // Bad Request if the message text is missing
   }
 
   // Send a reply to the user
   try {
-    await sendMessage(phoneNumberId, from, 'Hi.. I\'m Chinmay');
+    await sendMessage(phoneNumberId, from, "Hi.. I'm Chinmay");
     res.sendStatus(200); // Success, message sent
   } catch (error) {
+    console.error('Error handling webhook:', error.message);
     res.sendStatus(500); // Internal Server Error if something goes wrong
   }
 });
