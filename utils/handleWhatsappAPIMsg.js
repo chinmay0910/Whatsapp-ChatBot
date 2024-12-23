@@ -269,7 +269,8 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
         console.log(mediaID);
         
         const imagePath = await sendGetRequest(mediaID);
-
+        console.log("IMAGEPATH>> "+imagePath);
+        
         // Save this image path to the user state or database if necessary
         const userState = await UserQuizState.findOne({ userId: sender });
         userState.photoPath = imagePath;
