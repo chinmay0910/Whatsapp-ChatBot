@@ -96,7 +96,8 @@ async function sendWhatsAppMessage(to, body, mediaURL = null) {
             link: mediaURL,
         };
     }
-
+    console.log("Data>> "+JSON.stringify(data));
+    
     try {
         await axios.post(`https://graph.facebook.com/v14.0/${PHONE_NUMBER_ID}/messages`, data, {
             headers: {
