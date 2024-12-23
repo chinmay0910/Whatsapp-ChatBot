@@ -8,8 +8,6 @@ const UserQuizState = require('../models/UserQuizState');
 const axios = require('axios');
 const path = require('path');
 
-const whatsappPhoneNumber = process.env.WhatsappPhoneNumber; // Replace with WhatsApp Business number
-
 // Directory for storing certificates and temporary photos
 const certificatesPath = './uploads/certificates/';
 const photosPath = './uploads/photos/';
@@ -81,6 +79,7 @@ async function generateCertificate(userId, name, score, photoPath) {
 }
 
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_ID;
+const Auth_token = process.env.WHATSAPP_API_TOKEN;
 // Send message via WhatsApp Business API
 async function sendWhatsAppMessage(to, body, mediaUrl = null) {
     const data = {
@@ -101,7 +100,7 @@ async function sendWhatsAppMessage(to, body, mediaUrl = null) {
     try {
         await axios.post(`https://graph.facebook.com/v14.0/${PHONE_NUMBER_ID}/messages`, data, {
             headers: {
-                'Authorization': `Bearer ${process.env.WHATSAPP_API_TOKEN}`,
+                'Authorization': `Bearer ${Auth_token}`,
                 'Content-Type': 'application/json',
             }
         });
@@ -136,7 +135,7 @@ async function sendGetRequest(id) {
     try {
         const response = await axios.get(newurl, {
             headers: {
-                "Authorization": "Bearer " + token // Add your Token to the header of the API request
+                "Authorization": "Bearer " +  Auth_token// Add your Token to the header of the API request
             }
         });
 
@@ -171,7 +170,7 @@ async function sendImgDownload(mediaURL, mediaMimeType, id) {
     try {
         const response = await axios.get(mediaURL, {
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${Auth_token}`,
                 'Content-Type': mediaMimeType,
             },
             responseType: 'arraybuffer', // This is important for binary data
