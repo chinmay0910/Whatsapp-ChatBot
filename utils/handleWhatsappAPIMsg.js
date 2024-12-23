@@ -138,34 +138,36 @@ async function sendGetRequest(id) {
             headers: {
                 "Authorization": "Bearer " + token // Add your Token to the header of the API request
             }
-        })
-        console.log(response);
-        //if you want to see the response you get. 
+        });
+
+        console.log("Full API Response:", response.data); // Log the full response
 
         if (response.data && response.data.url) {
-
-            //Get the Image Url
             const mediaURL = response.data.url;
 
-            const mediaMimeType = response.data.mime_type;
+            // Check if mime_type exists, log if undefined
+            const mediaMimeType = response.data.mime_type || "unknown";
+            if (mediaMimeType === "unknown") {
+                console.warn("Mime type is missing in the API response");
+            }
 
-            console.log(" Response from Graph V.18 - image: " + mediaURL);
-            console.log(" Mime type: " + mediaMimeType);
+            console.log("Response from Graph V14.0 - Image URL:", mediaURL);
+            console.log("Mime type:", mediaMimeType);
 
             return await sendImgDownload(mediaURL, mediaMimeType, id);
         } else {
             console.log("Unexpected response format:", response.data);
         }
     } catch (error) {
-        console.error('Error saving image from sendgetrequest:', error.message);
+        console.error("Error saving image from sendGetRequest:", error.message);
     }
 }
 
 async function sendImgDownload(mediaURL, mediaMimeType, id) {
     const filename = `WA_${id}`;
-    console.log("mediaURL>> "+mediaURL);
-    
-    // filename = "testname"
+    console.log("mediaURL:", mediaURL);
+    console.log("mediaMimeType:", mediaMimeType);
+
     try {
         const response = await axios.get(mediaURL, {
             headers: {
@@ -175,29 +177,24 @@ async function sendImgDownload(mediaURL, mediaMimeType, id) {
             responseType: 'arraybuffer', // This is important for binary data
         });
 
-        // Check if the response contains data
         if (response.data) {
-
             if (mediaMimeType.startsWith("image/")) {
                 const photosPath = './uploads/photos/';
-                const file_extension = photosPath + filename + "." + mediaMimeType.split('/')[1]
-                const typeoffile = mediaMimeType.split('/')[0]
-                
-                const somedata = Buffer.from(response.data, 'binary')
-                // Save the binary data to a variable
+                const fileExtension = `${photosPath}${filename}.${mediaMimeType.split('/')[1]}`;
+                const imageData = Buffer.from(response.data, 'binary');
 
-                await fs.writeFileSync(file_extension, somedata);
+                await fs.writeFileSync(fileExtension, imageData);
 
-                console.log(`Media saved to ${file_extension} successfully.`);
-
-                // Return the filename upon success
-                return file_extension;
+                console.log(`Media saved to ${fileExtension} successfully.`);
+                return fileExtension;
+            } else {
+                console.warn("Invalid mime type for an image:", mediaMimeType);
             }
         } else {
-            console.error('Empty response data received.');
+            console.error("Empty response data received.");
         }
     } catch (error) {
-        console.error('Error sending to AWS:', error.message);
+        console.error("Error downloading media:", error.message);
     }
 }
 
