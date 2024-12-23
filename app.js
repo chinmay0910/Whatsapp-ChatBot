@@ -152,6 +152,7 @@ const sendMessage = async (phoneNumberId, from, text) => {
 
 // Main webhook handler
 app.post('/webhook', async (req, res) => {
+  console.log('Incoming Webhook Payload:', JSON.stringify(req.body, null, 2));
   const { entry } = req.body;
 
   // Validate webhook body structure
