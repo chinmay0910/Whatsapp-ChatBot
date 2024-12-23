@@ -81,7 +81,7 @@ async function generateCertificate(userId, name, score, photoPath) {
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_ID;
 const Auth_token = process.env.WHATSAPP_API_TOKEN;
 // Send message via WhatsApp Business API
-async function sendWhatsAppMessage(to, body, mediaID = null) {
+async function sendWhatsAppMessage(to, body, mediaURL = null) {
     const data = {
         messaging_product: 'whatsapp',
         to,
@@ -90,10 +90,10 @@ async function sendWhatsAppMessage(to, body, mediaID = null) {
         }
     };
 
-    if (mediaID) {
+    if (mediaURL) {
         data.type = 'document' // or 'document' for PDFs
         data.document = {
-            id: mediaID,
+            link: mediaURL,
         };
     }
 
@@ -112,9 +112,9 @@ async function sendWhatsAppMessage(to, body, mediaID = null) {
 // Send certificate via WhatsApp
 async function sendCertificate(userId, name, score, photoPath) {
     const { certificateFilePath, certId } = await generateCertificate(userId, name, score, photoPath);
-    // const mediaUrl = path.join("https://whatsapp-chatbot-em4i.onrender.com", certificateFilePath); // Update with your server URL
-    const mediaId = await uploadMedia(certificateFilePath, 'application/pdf');
-    await sendWhatsAppMessage(userId, `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`, mediaId);
+    const mediaUrl = path.join("https://whatsapp-chatbot-em4i.onrender.com", certificateFilePath); // Update with your server URL
+    // const mediaId = await uploadMedia(certificateFilePath, 'application/pdf');
+    await sendWhatsAppMessage(userId, `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`, mediaUrl);
 
     return certId;
 }
