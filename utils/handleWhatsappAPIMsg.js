@@ -133,7 +133,7 @@ async function saveQuizResult(name, score, email, certId) {
 
 // Handle WhatsApp incoming messages
 async function handleIncomingMessage(sender, messageBody) {
-    const message = messageBody.Body;
+    const message = messageBody;
     const quizQuestions = await fetchQuizQuestions();
     let userState = await UserQuizState.findOne({ userId: sender });
 
