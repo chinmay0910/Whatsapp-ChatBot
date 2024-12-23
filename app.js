@@ -119,7 +119,7 @@ app.get("/webhook", (req, res) => {
   
 
   if (mode && token) {
-    if (mode === "subcribe" && token === mytoken) {
+    if (mode === "subscribe" && token === mytoken) {
       res.status(200).send(challenge); // Respond with the challenge
     } else {
       res.status(403).send('Forbidden'); // Respond with a 403 if token doesn't match
