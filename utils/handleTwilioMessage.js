@@ -1,7 +1,7 @@
 const xlsx = require('xlsx');
 const fs = require('fs');
 const crypto = require('crypto');
-const sendMail = require('../utils/sendMail'); // Import the sendMail function
+const sendMail = require('./sendMail'); // Import the sendMail function
 const { PDFDocument } = require('pdf-lib');
 const { fetchQuizQuestions } = require('../controllers/questions');
 const UserQuizState = require('../models/UserQuizState');

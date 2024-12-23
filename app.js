@@ -6,7 +6,7 @@ const questionRoutes = require('./routes/questionRoutes');
 const UserQuizState = require('./models/UserQuizState');
 const Payment = require('./models/Payment');
 const path = require('path');
-const handleTwilioMessage = require('./utils/handleMessage');
+const handleIncomingMessage = require('./utils/handleWhatsappAPIMsg');
 const axios = require('axios');
 
 const app = express();
@@ -88,7 +88,7 @@ app.get('/', async (req, res) => {
 });
 
 
-const twilioAccountSid = process.env.TwilioAccountSid;
+/* const twilioAccountSid = process.env.TwilioAccountSid;
 const twilioAuthToken = process.env.TwilioAuthToken;
 // const twilioPhoneNumber = process.env.TwilioPhoneNumber;
 const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
@@ -103,7 +103,7 @@ app.post('/twilioDemo', async (req, res)=>{
 
   res.status(200).send('Message sent');
 })
-
+*/
 // Initialize WhatsApp Bot
 // initializeBot();
 
@@ -130,7 +130,7 @@ app.get("/webhook", (req, res) => {
 });
 
 // Function to handle sending a reply to a user
-const sendMessage = async (phoneNumberId, from, text) => {
+/*const sendMessage = async (phoneNumberId, from, text) => {
   try {
     const response = await axios.post(
       `https://graph.facebook.com/v13.0/${phoneNumberId}/messages`,
@@ -151,7 +151,7 @@ const sendMessage = async (phoneNumberId, from, text) => {
     console.error('Error sending message:', error.response?.data || error.message);
     throw new Error('Failed to send message');
   }
-};
+};*/
 
 // Main webhook handler
 app.post('/webhook', async (req, res) => {
@@ -182,6 +182,8 @@ app.post('/webhook', async (req, res) => {
   const from = message.from;
   const msg = message.text ? message.text.body : '';
 
+  // Send a reply to the user
+  try {
   // Log the incoming message for debugging
   console.log(`Received message from ${from}: ${msg}`);
 
@@ -189,10 +191,9 @@ app.post('/webhook', async (req, res) => {
     console.error('Invalid payload: Missing message text');
     return res.sendStatus(400); // Bad Request if the message text is missing
   }
-
-  // Send a reply to the user
-  try {
-    await sendMessage(phoneNumberId, from, "Hi.. I'm Chinmay");
+    // await sendMessage(phoneNumberId, from, "Hi.. I'm Chinmay");
+    handleIncomingMessage(from, msg);
+      
     res.sendStatus(200); // Success, message sent
   } catch (error) {
     console.error('Error handling webhook:', error.message);
