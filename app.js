@@ -188,10 +188,6 @@ app.post('/webhook', async (req, res) => {
   // Log the incoming message for debugging
   console.log(`Received message from ${from}: ${msg}`);
 
-  if (!msg) {
-    console.error('Invalid payload: Missing message text');
-    return res.sendStatus(400); // Bad Request if the message text is missing
-  }
     console.log("messageType: "+message.type);
     
     // await sendMessage(phoneNumberId, from, "Hi.. I'm Chinmay");
@@ -201,6 +197,12 @@ app.post('/webhook', async (req, res) => {
     }else if(message?.type == "image"){
       console.log("Hi am i am in image");
       handleIncomingMessage(from, msg, message?.image);
+    }
+
+    
+    if (!msg) {
+      console.error('Invalid payload: Missing message text');
+      return res.sendStatus(400); // Bad Request if the message text is missing
     }
 
     res.sendStatus(200); // Success, message sent
