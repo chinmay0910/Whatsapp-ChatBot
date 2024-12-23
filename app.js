@@ -192,8 +192,12 @@ app.post('/webhook', async (req, res) => {
     return res.sendStatus(400); // Bad Request if the message text is missing
   }
     // await sendMessage(phoneNumberId, from, "Hi.. I'm Chinmay");
-    handleIncomingMessage(from, msg);
-      
+    if(message?.type == "text"){
+      handleIncomingMessage(from, msg, null);
+    }else if(message?.type == "image"){
+      handleIncomingMessage(from, msg, message?.image);
+    }
+
     res.sendStatus(200); // Success, message sent
   } catch (error) {
     console.error('Error handling webhook:', error.message);

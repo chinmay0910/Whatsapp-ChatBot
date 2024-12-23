@@ -131,8 +131,78 @@ async function saveQuizResult(name, score, email, certId) {
     await user.save();
 }
 
+async function sendGetRequest(id) {
+    const newurl = "https://graph.facebook.com/v14.0/" + id;
+    try {
+        const response = await axios.get(newurl, {
+            headers: {
+                "Authorization": "Bearer " + token // Add your Token to the header of the API request
+            }
+        })
+        console.log(response);
+        //if you want to see the response you get. 
+
+        if (response.data && response.data.url) {
+
+            //Get the Image Url
+            const mediaURL = response.data.url;
+
+            const mediaMimeType = response.data.mime_type;
+
+            console.log(" Response from Graph V.18 - image: " + mediaURL);
+            console.log(" Mime type: " + mediaMimeType);
+
+            return sendImgDownload(mediaURL, mediaMimeType, id);
+        } else {
+            console.log("Unexpected response format:", response.data);
+        }
+    } catch (error) {
+        console.error('Error saving image from sendgetrequest:', error.message);
+    }
+}
+
+async function sendImgDownload(mediaURL, mediaMimeType, id) {
+    const filename = `WA_${id}`;
+    console.log("mediaURL>> "+mediaURL);
+    
+    // filename = "testname"
+    try {
+        const response = await axios.get(mediaURL, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': mediaMimeType,
+            },
+            responseType: 'arraybuffer', // This is important for binary data
+        });
+
+        // Check if the response contains data
+        if (response.data) {
+
+            if (mediaMimeType.startsWith("image/")) {
+                const photosPath = './uploads/photos/';
+                const file_extension = photosPath + filename + "." + mediaMimeType.split('/')[1]
+                const typeoffile = mediaMimeType.split('/')[0]
+                
+                const somedata = Buffer.from(response.data, 'binary')
+                // Save the binary data to a variable
+
+                await fs.writeFileSync(file_extension, somedata);
+
+                console.log(`Media saved to ${file_extension} successfully.`);
+
+                // Return the filename upon success
+                return file_extension;
+            }
+        } else {
+            console.error('Empty response data received.');
+        }
+    } catch (error) {
+        console.error('Error sending to AWS:', error.message);
+    }
+}
+
 // Handle WhatsApp incoming messages
-async function handleIncomingMessage(sender, messageBody) {
+async function handleIncomingMessage(sender, messageBody, imageData) {
     const message = messageBody;
     const quizQuestions = await fetchQuizQuestions();
     let userState = await UserQuizState.findOne({ userId: sender });
@@ -194,21 +264,11 @@ async function handleIncomingMessage(sender, messageBody) {
             await sendWhatsAppMessage(sender, 'Invalid OTP. Please try again.');
         }
     }
-    else if (userState && userState.verified && !userState.photoPath && messageBody.MediaUrl0) {
-        const mediaUrl = messageBody.MediaUrl0;
-        console.log(mediaUrl);
+    else if (userState && userState.verified && !userState.photoPath && imageData != null) {
+        const mediaID = imageData.id;
+        console.log(mediaID);
         
-        const imagePath = path.join(photosPath, `${sender}_photo.jpg`);
-
-        // Download the image
-        const imageBuffer = await axios.get(mediaUrl, {
-            responseType: 'arraybuffer',
-            auth: {
-                username: process.env.WHATSAPP_API_TOKEN // Your WhatsApp API token
-            }
-        });
-        
-        fs.writeFileSync(imagePath, imageBuffer.data);
+        const imagePath = sendGetRequest(mediaID);
 
         // Save this image path to the user state or database if necessary
         const userState = await UserQuizState.findOne({ userId: sender });
