@@ -78,7 +78,7 @@ async function generateCertificate(userId, name, score, photoPath) {
     }
 
     // Save the PDF to a file
-    const certificateFilePath = `${certificatesPath}${userId}_certificate.pdf`;
+    const certificateFilePath = `${certificatesPath}${certId}_certificate.pdf`;
     const pdfBytesOutput = await pdfDoc.save();
     fs.writeFileSync(certificateFilePath, pdfBytesOutput);
 
