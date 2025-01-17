@@ -98,7 +98,8 @@ async function sendWhatsAppMessage(to, body, mediaURL = null) {
         data.type = 'document' // or 'document' for PDFs
         data.document = {
             link: mediaURL,
-            caption: body
+            caption: body,
+            filename: "quiz_certificate"
         };
     }else{
         data.text ={
