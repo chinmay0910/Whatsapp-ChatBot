@@ -13,9 +13,11 @@ router.post('/add', async (req, res) => {
     }
 
     try {
-        // Create a new question document
+        const formattedQuestion = question.split(',').join('\n');
+
+        // Create a new question document with formatted question
         const newQuestion = new Question({
-            question,
+            question: formattedQuestion,
             options,
             answer
         });
