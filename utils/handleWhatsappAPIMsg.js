@@ -124,6 +124,8 @@ async function sendCertificate(userId, name, score, photoPath) {
     const { certificateFilePath, certId } = await generateCertificate(userId, name, score, photoPath);
     const serverUrl = "https://whatsapp-chatbot-em4i.onrender.com";
     const mediaUrl = `${serverUrl}/${certificateFilePath.substring(2)}`; // Update with your server URL
+    console.log(mediaUrl);
+    
     // const mediaId = await uploadMedia(certificateFilePath, 'application/pdf');
     await sendWhatsAppMessage(userId, `Congratulations, ${name}! 🎉\nHere is your certificate for completing the quiz.\nCertificate ID: ${certId}`, mediaUrl);
 
@@ -150,7 +152,7 @@ async function sendGetRequest(id) {
             }
         });
 
-        console.log("Full API Response:", response.data); // Log the full response
+        // console.log("Full API Response:", response.data); // Log the full response
 
         if (response.data && response.data.url) {
             const mediaURL = response.data.url;
@@ -161,8 +163,8 @@ async function sendGetRequest(id) {
                 console.warn("Mime type is missing in the API response");
             }
 
-            console.log("Response from Graph V14.0 - Image URL:", mediaURL);
-            console.log("Mime type:", mediaMimeType);
+            // console.log("Response from Graph V14.0 - Image URL:", mediaURL);
+            // console.log("Mime type:", mediaMimeType);
 
             return await sendImgDownload(mediaURL, mediaMimeType, id);
         } else {
@@ -175,8 +177,8 @@ async function sendGetRequest(id) {
 
 async function sendImgDownload(mediaURL, mediaMimeType, id) {
     const filename = `WA_${id}`;
-    console.log("mediaURL:", mediaURL);
-    console.log("mediaMimeType:", mediaMimeType);
+    // console.log("mediaURL:", mediaURL);
+    // console.log("mediaMimeType:", mediaMimeType);
 
     try {
         const response = await axios.get(mediaURL, {
@@ -195,7 +197,7 @@ async function sendImgDownload(mediaURL, mediaMimeType, id) {
 
                 await fs.writeFileSync(fileExtension, imageData);
 
-                console.log(`Media saved to ${fileExtension} successfully.`);
+                // console.log(`Media saved to ${fileExtension} successfully.`);
                 return fileExtension;
             } else {
                 console.warn("Invalid mime type for an image:", mediaMimeType);
@@ -296,10 +298,10 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
     }
     else if (userState && userState.verified && !userState.photoPath && imageData != null) {
         const mediaID = imageData.id;
-        console.log(mediaID);
+        // console.log(mediaID);
         
         const imagePath = await sendGetRequest(mediaID);
-        console.log("IMAGEPATH>> "+imagePath);
+        // console.log("IMAGEPATH>> "+imagePath);
         
         // Save this image path to the user state or database if necessary
         const userState = await UserQuizState.findOne({ userId: sender });
