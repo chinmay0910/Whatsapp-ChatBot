@@ -1,6 +1,7 @@
 const xlsx = require('xlsx');
 const fs = require('fs');
 const crypto = require('crypto');
+const fontkit = require('fontkit');
 const sendMail = require('../utils/sendMail'); // Import the sendMail function
 const { PDFDocument } = require('pdf-lib');
 const { fetchQuizQuestions } = require('../controllers/questions');
@@ -40,35 +41,41 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Generate certificate using PDF template
 async function generateCertificate(userId, name, score, photoPath) {
-    const templatePath = './public/certificate_template.pdf';
+    const templatePath = './public/hacktify_quiz_cert.pdf';
+    const fontPath = './public/Fonts/Teko-Bold.ttf'; // Replace with your Google Font TTF file
     const pdfBytes = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(pdfBytes);
-    const form = pdfDoc.getForm();
     const quizQuestions = await fetchQuizQuestions();
+    // Register fontkit with pdf-lib
+    pdfDoc.registerFontkit(fontkit);
 
-    // Populate form fields
-    form.getTextField('name').setText(name);
-    form.getTextField('score').setText(`${score} / ${quizQuestions.length}`);
+    const page = pdfDoc.getPage(0);
+
+    // Embed the Google Font
+    const fontBytes = fs.readFileSync(fontPath);
+    const googleFont = await pdfDoc.embedFont(fontBytes);
+
+    // Generate a unique certificate ID
     const certId = crypto.randomBytes(4).toString('hex');
-    form.getTextField('certificateId').setText(certId);
-    form.getTextField('date').setText(new Date().toLocaleDateString());
+
+    // Draw text at specific coordinates using the Google Font
+    page.drawText(name, { x: 70, y: 280, size: 28, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255)  });
+    page.drawText(`${score} / ${quizQuestions.length}`, { x: 195, y: 140, size: 18, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255) });
+    page.drawText(certId, { x: 160, y: 105, size: 18, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255) });
+    page.drawText(new Date().toLocaleDateString(), { x: 90, y: 73, size: 18, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255) });
 
     // Add the user photo to the PDF if it exists
     if (photoPath && fs.existsSync(photoPath)) {
         const photoBytes = fs.readFileSync(photoPath);
         const photoImage = await pdfDoc.embedJpg(photoBytes);
         const photoDimensions = photoImage.scale(0.5);
-        const page = pdfDoc.getPage(0);
         page.drawImage(photoImage, {
-            x: 603, // Adjust X position
-            y: 282, // Adjust Y position
-            width: 150,
-            height: 150
+            x: 650,
+            y: 367,
+            width: 133,
+            height: 150,
         });
     }
-
-    // Flatten the form fields to make them non-editable
-    form.flatten();
 
     // Save the PDF to a file
     const certificateFilePath = `${certificatesPath}${userId}_certificate.pdf`;
