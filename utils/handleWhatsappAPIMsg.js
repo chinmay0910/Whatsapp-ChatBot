@@ -284,7 +284,7 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
             await userState.save();
 
             sendMail(email, 'Quiz OTP Verification', `<p>Your OTP is: <strong>${otp}</strong></p>`);
-            await sendWhatsAppMessage(sender, 'An OTP has been sent to your email. Please enter the OTP to verify your email:');
+            await sendWhatsAppMessage(sender, 'An OTP has been sent to your email. Please enter the OTP to verify your email. \n\n\n Wrong Email ID ? Just type *CHANGE EMAIL* :)');
         } else {
             await sendWhatsAppMessage(sender, 'Invalid email format. Please try again.');
         }
