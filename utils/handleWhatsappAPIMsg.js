@@ -289,7 +289,13 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
             await sendWhatsAppMessage(sender, 'Invalid email format. Please try again.');
         }
     } else if (userState && userState.otp && !userState.verified) {
-        if (message === userState.otp) {
+        if (message.toUpperCase() === "CHANGE EMAIL" && userState && userState.email) {
+            // Reset email and allow the user to enter a new email
+            userState.email = null;
+            userState.otp = null;
+            await userState.save();
+            await sendWhatsAppMessage(sender, 'Email reset. Please enter your email again:');
+        }else if (message === userState.otp) {
             userState.verified = true;
             await userState.save();
             await sendWhatsAppMessage(sender, 'Email verified successfully! Please upload your profile picture for generating the completion certificate.');
@@ -315,7 +321,15 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
         const currentQuestionIndex = userState.questionIndex;
         const correctAnswer = quizQuestions[currentQuestionIndex].answer;
 
-        if (message.toUpperCase() === correctAnswer) {
+        // Validate user input
+        if (!['A', 'B', 'C', 'D'].includes(message.toUpperCase())) {
+            // Resend the current question if the input is invalid
+            await sendWhatsAppMessage(sender, "Invalid option. Please select A, B, C, or D.\n" +
+                quizQuestions[currentQuestionIndex].question + "\n" + quizQuestions[currentQuestionIndex].options);
+            return; // Exit early to wait for the valid response
+        }
+
+        if (message.toUpperCase() === correctAnswer.toUpperCase()) {
             userState.score++;
         }
 
