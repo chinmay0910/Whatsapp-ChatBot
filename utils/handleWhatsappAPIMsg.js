@@ -95,12 +95,22 @@ async function sendWhatsAppMessage(to, body, mediaURL = null) {
     };
 
     if (mediaURL) {
-        data.type = 'document' // or 'document' for PDFs
-        data.document = {
-            link: mediaURL,
-            caption: body,
-            filename: "quiz_certificate"
-        };
+        if (mediaURL.includes('/certificates/')) {
+            // If the URL contains '/certificates/', send as document (for PDFs or certificates)
+            data.type = 'document';  // or 'document' for PDFs
+            data.document = {
+                link: mediaURL,
+                caption: body,
+                filename: "quiz_certificate"
+            };
+        } else {
+            // If the URL doesn't contain '/certificates/', send as image
+            data.type = 'image';  // Sending as image
+            data.image = {
+                link: mediaURL,
+                caption: body
+            };
+        }
     }else{
         data.text ={
             body
@@ -315,7 +325,18 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
         userState.photoPath = imagePath;
         await userState.save();
 
-        await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n" + quizQuestions[0].question + "\n" + quizQuestions[0].options);
+        // await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n" + quizQuestions[0].question + "\n" + quizQuestions[0].options);
+        // Check if the first question is an image
+        const firstQuestion = quizQuestions[0];
+        if (firstQuestion.question.includes('/uploads/')) {
+            // If the first question is an image, send the media URL
+            const serverUrl = "https://whatsapp-chatbot-em4i.onrender.com";
+            const mediaUrl = `${serverUrl}${firstQuestion.question}`;
+            await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n All the best 🙌", mediaUrl);  // Send the media URL
+        } else {
+            // If the first question is a text-based question, send it normally
+            await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n" + firstQuestion.question + "\n" + firstQuestion.options);
+        }
     }
     else if (userState && userState.verified && userState.photoPath && message) {
         const currentQuestionIndex = userState.questionIndex;
@@ -324,8 +345,9 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
         // Validate user input
         if (!['A', 'B', 'C', 'D'].includes(message.toUpperCase())) {
             // Resend the current question if the input is invalid
-            await sendWhatsAppMessage(sender, "Invalid option. Please select A, B, C, or D.\n" +
-                quizQuestions[currentQuestionIndex].question + "\n" + quizQuestions[currentQuestionIndex].options);
+            // await sendWhatsAppMessage(sender, "Invalid option. Please select A, B, C, or D.\n" +
+            //     quizQuestions[currentQuestionIndex].question + "\n" + quizQuestions[currentQuestionIndex].options);
+            await sendWhatsAppMessage(sender, "Invalid option. Please select A, B, C, or D.\n");
             return; // Exit early to wait for the valid response
         }
 
