@@ -52,7 +52,7 @@
   </div>
 
   <script>
-    const apiUrl = 'http://localhost:3000'; // Update this with your API base URL
+    // const apiUrl = 'http://localhost:3000'; // Update this with your API base URL
     const questionList = document.getElementById('question-list');
     const formTitle = document.getElementById('form-title');
     const questionForm = document.getElementById('question-form');
@@ -64,7 +64,7 @@
 
     // Fetch and display questions
     async function fetchQuestions() {
-      const response = await fetch(`${apiUrl}/questions/`);
+      const response = await fetch(`/questions/`);
       const data = await response.json();
       displayQuestions(data);
     }
@@ -102,8 +102,8 @@
       }
 
       const url = editingQuestionId
-        ? `${apiUrl}/questions/edit/${editingQuestionId}`
-        : `${apiUrl}/questions/add`;
+        ? `/questions/edit/${editingQuestionId}`
+        : `/questions/add`;
 
       const method = editingQuestionId ? 'PUT' : 'POST';
 
@@ -135,7 +135,7 @@
     // Delete a question
     window.deleteQuestion = async (id) => {
       if (confirm('Are you sure you want to delete this question?')) {
-        await fetch(`${apiUrl}/questions/delete/${id}`, { method: 'DELETE' });
+        await fetch(`/questions/delete/${id}`, { method: 'DELETE' });
         fetchQuestions();
       }
     };
