@@ -3,9 +3,40 @@ const express = require('express');
 const router = express.Router();
 const Question = require('../models/QuizQuestion');  // Import the Question model
 const { fetchQuizQuestions } = require('../controllers/questions');
+const multer = require('multer');
+const path = require('path');
+const crypto = require('crypto');
 
-// 1. Add a new question
-router.post('/add', async (req, res) => {
+// Set up Multer storage with unique filenames
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); // Directory to store uploaded files
+    },
+    filename: (req, file, cb) => {
+        // Generate a unique filename using current timestamp and random bytes
+        const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
+        const extension = path.extname(file.originalname).toLowerCase();
+        cb(null, `${uniqueSuffix}${extension}`);
+    }
+});
+
+const upload = multer({ 
+    storage, 
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only JPEG, JPG, and PNG files are allowed'));
+        }
+    }
+});
+
+// Route to add a new question
+router.post('/add', upload.single('image'), async (req, res) => {
     const { question, options, answer } = req.body;
 
     if (!question || !options || !answer) {
@@ -13,19 +44,27 @@ router.post('/add', async (req, res) => {
     }
 
     try {
-        const formattedQuestion = options.split(',').join('\n');
+        const formattedOptions = options.split(',').join('\n');
+        let finalQuestion = question;
 
-        // Create a new question document with formatted question
+        // Check if an image was uploaded
+        if (req.file) {
+            const imagePath = `/uploads/${req.file.filename}`;
+            // Append the image path to the question field
+            finalQuestion = imagePath;
+        }
+
+        // Create a new question document
         const newQuestion = new Question({
-            question: question,
-            options: formattedQuestion,
-            answer
+            question: finalQuestion,
+            options: formattedOptions,
+            answer,
         });
 
         // Save the question to the database
         await newQuestion.save();
 
-        return res.status(201).json({ message: 'Question added successfully', question: newQuestion });
+        return res.status(201).json({ message: 'Question added successfully'});
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: 'Error saving question', error: err.message });

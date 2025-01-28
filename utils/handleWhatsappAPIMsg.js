@@ -337,8 +337,18 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
         await userState.save();
 
         if (userState.questionIndex < quizQuestions.length) {
-            const nextQuestionIndex = userState.questionIndex;
-            await sendWhatsAppMessage(sender, quizQuestions[nextQuestionIndex].question + '\n' + quizQuestions[nextQuestionIndex].options);
+            const nextQuestion = quizQuestions[userState.questionIndex];
+            
+            // Check if the next question contains a media URL (image)
+            if (nextQuestion.question.includes('/uploads/')) {
+                // Share image as a question
+                const serverUrl = "https://whatsapp-chatbot-em4i.onrender.com";
+                const mediaUrl = `${serverUrl}${nextQuestion.question}`;
+                await sendWhatsAppMessage(sender, '', mediaUrl);  // Send the media URL
+            } else {
+                // Send text-based question
+                await sendWhatsAppMessage(sender, nextQuestion.question + '\n' + nextQuestion.options);
+            }
         } else {
             const finalScore = userState.score;
             const name = userState.name;
