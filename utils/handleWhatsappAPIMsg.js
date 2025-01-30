@@ -41,7 +41,7 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Generate certificate using PDF template
 async function generateCertificate(userId, name, score, photoPath) {
-    const templatePath = './public/hacktify_quiz_cert.pdf';
+    const templatePath = './public/Certificate of Completion.pdf';
     const fontPath = './public/Fonts/Teko-Bold.ttf'; // Replace with your Google Font TTF file
     const pdfBytes = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -101,7 +101,7 @@ async function sendWhatsAppMessage(to, body, mediaURL = null) {
             data.document = {
                 link: mediaURL,
                 caption: body,
-                filename: "quiz_certificate"
+                filename: "Certificate_of_Completion"
             };
         } else {
             // If the URL doesn't contain '/certificates/', send as image
