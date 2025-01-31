@@ -214,6 +214,7 @@
         showNotification(editingQuestionId ? 'Question updated successfully!' : 'Question added successfully!');
         editingQuestionId = null;
         questionForm.reset();
+        inputBox.classList.remove("hidden")
         fetchQuestions();
         closeModal();
       } catch (error) {
