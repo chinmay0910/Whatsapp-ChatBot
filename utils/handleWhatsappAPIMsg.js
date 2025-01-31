@@ -250,6 +250,14 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
     const quizQuestions = await fetchQuizQuestions();
     let userState = await UserQuizState.findOne({ userId: sender });
 
+    const scehduleQuiz = false;
+    
+    if(scehduleQuiz){
+        await sendWhatsAppMessage(sender, 'The quiz is not yet available. Please check back at official schedule.');
+        return;
+    }
+
+
     if (message.toLowerCase() === 'restart') {
         if (userState) {
             await UserQuizState.deleteOne({ userId: sender });
@@ -332,10 +340,12 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
             // If the first question is an image, send the media URL
             const serverUrl = "https://whatsapp-chatbot-em4i.onrender.com";
             const mediaUrl = `${serverUrl}${firstQuestion.question}`;
-            await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n All the best 🙌", mediaUrl);  // Send the media URL
+            await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n All the best 🙌");  // Send the media URL
+            await sendWhatsAppMessage(sender, "", mediaUrl);
         } else {
             // If the first question is a text-based question, send it normally
-            await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n" + firstQuestion.question + "\n" + firstQuestion.options);
+            await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n All the best 🙌");
+            await sendWhatsAppMessage(sender, firstQuestion.question + "\n" + firstQuestion.options);
         }
     }
     else if (userState && userState.verified && userState.photoPath && message) {
