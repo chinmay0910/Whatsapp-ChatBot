@@ -253,7 +253,7 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
     const scehduleQuiz = false;
     
     if(scehduleQuiz){
-        await sendWhatsAppMessage(sender, 'The quiz is not yet available. Please check back at official schedule.');
+        await sendWhatsAppMessage(sender, `Welcome to the *National Cybersecurity Conclave*, \nThe *Round 1* has not started yet. Stay Tuned!\n\nWe wish you all the best!`);
         return;
     }
 
