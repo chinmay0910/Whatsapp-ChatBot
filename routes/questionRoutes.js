@@ -72,7 +72,7 @@ router.post('/add', upload.single('image'), async (req, res) => {
 });
 
 // 2. Edit an existing question
-router.put('/edit/:id', async (req, res) => {
+router.put('/edit/:id', upload.single('image'), async (req, res) => {
     const { id } = req.params;  // Get the question ID from the URL
     const { question, options, answer } = req.body;
 
@@ -81,14 +81,31 @@ router.put('/edit/:id', async (req, res) => {
     }
 
     try {
+        const formattedOptions = options.split(',').join('\n');
+        let finalQuestion = question;
+
+        // Check if an image was uploaded
+        if (req.file) {
+            const imagePath = `/uploads/${req.file.filename}`;
+            // Append the image path to the question field if an image was uploaded
+            finalQuestion = imagePath;
+        }
+
         // Find the question by ID and update it
-        const updatedQuestion = await Question.findByIdAndUpdate(id, { question, options, answer }, { new: true });
+        const updatedQuestion = await Question.findByIdAndUpdate(id, 
+            { 
+                question: finalQuestion, 
+                options: formattedOptions, 
+                answer 
+            }, 
+            { new: true } // return the updated document
+        );
 
         if (!updatedQuestion) {
             return res.status(404).json({ message: 'Question not found' });
         }
 
-        return res.status(200).json({ message: 'Question updated successfully', question: updatedQuestion });
+        return res.status(200).json({ message: 'Question updated successfully'});
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: 'Error updating question', error: err.message });

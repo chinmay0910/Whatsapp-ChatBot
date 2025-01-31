@@ -9,6 +9,11 @@ const path = require('path');
 const handleIncomingMessage = require('./utils/handleWhatsappAPIMsg');
 const axios = require('axios');
 
+// contollers
+const { signinPage, createUser, login, getUser } = require("./controllers/signin");
+const quizRoutes = require("./routes/userState");
+const fetchuser = require('./middleware/fetchuser');
+
 const app = express();
 
 app.use(express.json());
@@ -18,6 +23,9 @@ const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'templates'));
 
+// handling static files 
+app.use(express.static(path.join(process.cwd(), 'publicscripts')));
+
 app.use("/uploads", express.static("uploads"));
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,7 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 connectToMongo();
 
 // Use routes
-app.use('/questions', questionRoutes);
+app.use('/questions', fetchuser, questionRoutes);
 
 // API Routes
 // handle webhook trigger
@@ -83,9 +91,29 @@ app.post('/', async (req, res) => {
   });
   
 
-app.get('/', async (req, res) => {
-    res.render('index');  // This will render templates/index.ejs
+app.get('/view-questions', async (req, res) => {
+    res.render('Question.ejs');  // This will render templates/index.ejs
 });
+
+
+app.get('/signinpage', (req, res) => {
+  res.render('SigninPage.ejs')
+})
+
+app.get('/', (req, res) => {
+  res.render('Dashboard.ejs')
+})
+
+app.get('/users', (req, res) => {
+  res.render('User.ejs')
+})
+
+
+app.get('/signin', signinPage)
+app.post('/createuser', createUser)
+app.post('/login', login)
+app.get('/getuser', fetchuser, getUser)
+app.use("/api/quiz", fetchuser, quizRoutes);
 
 
 /* const twilioAccountSid = process.env.TwilioAccountSid;

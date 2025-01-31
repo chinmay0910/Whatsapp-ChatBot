@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Question Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <%- include('partials/navbar.ejs'); %>
+
+  <div class="max-w-7xl container mx-auto px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Quiz Question Manager</h1>
+      <p class="text-gray-600 mt-2">Create and manage your quiz questions</p>
+    </div>
+
+    <!-- Add Question Button -->
+    <div class="flex justify-between items-center mb-6">
+      <button id="add-question-btn" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
+        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+        Add New Question
+      </button>
+      <div class="text-gray-600">
+        Total Questions: <span id="question-count" class="font-semibold">0</span>
+      </div>
+    </div>
+
+    <!-- Question List -->
+    <div id="question-list" class="space-y-4">
+      <!-- Questions will be dynamically added here -->
+    </div>
+  </div>
+
+  <!-- Modal (hidden by default) -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 hidden">
+    <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-xl mx-4">
+      <div class="flex justify-between items-center mb-6">
+        <h2 id="form-title" class="text-2xl font-semibold text-gray-900">Add a New Question</h2>
+        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      <form id="question-form" class="space-y-6">
+        <div>
+          <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Question</label>
+          <input type="text" id="question" name="question" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+        <div>
+          <label for="options" class="block text-sm font-medium text-gray-700 mb-1">Options (comma-separated)</label>
+          <input type="text" id="options" name="options" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+          <p class="mt-1 text-sm text-gray-500">Example: Option 1, Option 2, Option 3, Option 4</p>
+        </div>
+        <div>
+          <label for="answer" class="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
+          <input type="text" id="answer" name="answer" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+        <div>
+          <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Image (optional)</label>
+          <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+            <div class="space-y-1 text-center"  id="inputBox">
+              <i data-lucide="image" class="mx-auto h-12 w-12 text-gray-400"></i>
+              <div class="flex text-sm text-gray-600">
+                <label for="image" class="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500">
+                  <span>Upload a file</span>
+                  <input id="image" name="image" type="file" accept="image/*" class="sr-only" onchange="displayFileName()">
+                </label>
+                <p class="pl-1">or drag and drop</p>
+              </div>
+              <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+        
+              <!-- Display selected file name here -->
+            </div>
+            <p id="file-name" class="mt-2 text-sm text-gray-700"></p>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" id="cancel-btn" class="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+            Save Question
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    function displayFileName() {
+    const fileInput = document.getElementById('image');
+    const fileName = fileInput.files[0] ? fileInput.files[0].name : ''; // Get the file name
+    const fileNameDisplay = document.getElementById('file-name');
+    fileNameDisplay.textContent = fileName ? `Selected file: ${fileName}` : ''; // Display file name
+    inputBox.classList.add("hidden")
+  }
+
+    const questionList = document.getElementById('question-list');
+    const formTitle = document.getElementById('form-title');
+    const questionForm = document.getElementById('question-form');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const modal = document.getElementById('modal');
+    const addQuestionBtn = document.getElementById('add-question-btn');
+    const questionCount = document.getElementById('question-count');
+
+    let editingQuestionId = null;
+
+    // Fetch and display questions
+    async function fetchQuestions() {
+      try {
+        const response = await fetch(`/questions/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Auth-token": localStorage.getItem('Auth-token')
+          },
+        });
+        const data = await response.json();
+        displayQuestions(data);
+        questionCount.textContent = data.length;
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        showNotification('Error loading questions', 'error');
+      }
+    }
+
+    // Display questions in the list
+    function displayQuestions(questions) {
+      questionList.innerHTML = '';
+      questions.forEach(question => {
+        const questionItem = document.createElement('div');
+        questionItem.className = 'bg-white rounded-xl shadow-sm p-6 transition-all hover:shadow-md';
+        questionItem.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="space-y-3 flex-1">
+              <div class="flex items-center gap-2">
+                <i data-lucide="help-circle" class="w-5 h-5 text-blue-600"></i>
+                <h3 class="font-semibold text-gray-900">${question.question}</h3>
+              </div>
+              <div class="pl-7">
+                <p class="text-gray-600"><span class="font-medium">Options:</span> ${question.options}</p>
+                <p class="text-green-600 mt-1"><span class="font-medium">Answer:</span> ${question.answer}</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="editQuestion('${question._id}', '${question.question}', '${question.options}', '${question.answer}')"
+                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <i data-lucide="edit-2" class="w-5 h-5"></i>
+              </button>
+              <button onclick="deleteQuestion('${question._id}')"
+                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <i data-lucide="trash-2" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        questionList.appendChild(questionItem);
+        lucide.createIcons();
+      });
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-600' : 'bg-red-600'
+      } text-white z-50 transition-opacity duration-300`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Add or edit a question
+    questionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(questionForm);
+
+      if (!formData.get('question') || !formData.get('options') || !formData.get('answer')) {
+        showNotification('All fields are required!', 'error');
+        return;
+      }
+
+      try {
+        const url = editingQuestionId
+          ? `/questions/edit/${editingQuestionId}`
+          : `/questions/add`;
+
+        const method = editingQuestionId ? 'PUT' : 'POST';
+
+        await fetch(url, {
+          method,
+          headers: {
+            // "Content-Type": "application/json",
+            "Auth-token": localStorage.getItem('Auth-token')
+          },
+          body: formData,
+        });
+
+        showNotification(editingQuestionId ? 'Question updated successfully!' : 'Question added successfully!');
+        editingQuestionId = null;
+        questionForm.reset();
+        fetchQuestions();
+        closeModal();
+      } catch (error) {
+        console.error('Error saving question:', error);
+        showNotification('Error saving question', 'error');
+      }
+    });
+
+    // Edit a question
+    window.editQuestion = (id, question, options, answer) => {
+      editingQuestionId = id;
+      document.getElementById('question').value = question;
+      document.getElementById('options').value = options;
+      document.getElementById('answer').value = answer;
+      formTitle.textContent = 'Edit Question';
+      openModal();
+    };
+
+    // Delete a question
+    window.deleteQuestion = async (id) => {
+      if (confirm('Are you sure you want to delete this question?')) {
+        try {
+          await fetch(`/questions/delete/${id}`, { 
+            method: 'DELETE',
+            headers: {
+              "Content-Type": "application/json",
+              "Auth-token": localStorage.getItem('Auth-token')
+            }, 
+          });
+          showNotification('Question deleted successfully!');
+          fetchQuestions();
+        } catch (error) {
+          console.error('Error deleting question:', error);
+          showNotification('Error deleting question', 'error');
+        }
+      }
+    };
+
+    // Modal functions
+    addQuestionBtn.addEventListener('click', openModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    function openModal() {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+      questionForm.reset();
+      editingQuestionId = null;
+      formTitle.textContent = 'Add a New Question';
+    }
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Initial fetch
+    fetchQuestions();
+  </script>
+</body>
+</html>
