@@ -41,7 +41,7 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Generate certificate using PDF template
 async function generateCertificate(userId, name, score, photoPath) {
-    const templatePath = './public/Cyber Kushti Wrestle with Code for glory.pdf';
+    const templatePath = './public/Cyber Kushti Wrestle with Code for glory1.pdf';
     const fontPath = './public/Fonts/Teko-Bold.ttf'; // Replace with your Google Font TTF file
     const pdfBytes = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(pdfBytes);
