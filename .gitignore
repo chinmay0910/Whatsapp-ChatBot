@@ -3,3 +3,4 @@ node_modules
 sendMail.js
 sendMailer.js
 sendMailGun.js
+generateCertificate.js

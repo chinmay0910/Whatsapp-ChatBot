@@ -41,11 +41,10 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Generate certificate using PDF template
 async function generateCertificate(userId, name, score, photoPath) {
-    const templatePath = './public/Certificate of Completion.pdf';
+    const templatePath = './public/Cyber Kushti Wrestle with Code for glory.pdf';
     const fontPath = './public/Fonts/Teko-Bold.ttf'; // Replace with your Google Font TTF file
     const pdfBytes = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(pdfBytes);
-    const quizQuestions = await fetchQuizQuestions();
     // Register fontkit with pdf-lib
     pdfDoc.registerFontkit(fontkit);
 
@@ -59,23 +58,11 @@ async function generateCertificate(userId, name, score, photoPath) {
     const certId = crypto.randomBytes(4).toString('hex');
 
     // Draw text at specific coordinates using the Google Font
-    page.drawText(name, { x: 70, y: 280, size: 28, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255)  });
-    page.drawText(`${score} / ${quizQuestions.length}`, { x: 195, y: 140, size: 18, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255) });
-    page.drawText(certId, { x: 160, y: 105, size: 18, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255) });
-    page.drawText(new Date().toLocaleDateString(), { x: 90, y: 73, size: 18, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255) });
+    page.drawText(name, { x: 155, y: 380, size: 48, font: googleFont, color: rgb(255/255, 255/255, 255/255)  });
+    // page.drawText(`${score} / ${quizQuestions.length}`, { x: 195, y: 140, size: 18, font: googleFont, color: rgb(5 / 255, 47 / 255, 116 / 255) });
+    page.drawText(certId, { x: 110, y: 770, size: 18, font: googleFont, color: rgb(102 / 255, 112 / 255, 112 / 255) });
+    page.drawText(new Date().toLocaleDateString(), { x: 155, y: 180, size: 18, font: googleFont, color: rgb(255/255, 255/255, 255/255) });
 
-    // Add the user photo to the PDF if it exists
-    if (photoPath && fs.existsSync(photoPath)) {
-        const photoBytes = fs.readFileSync(photoPath);
-        const photoImage = await pdfDoc.embedJpg(photoBytes);
-        const photoDimensions = photoImage.scale(0.5);
-        page.drawImage(photoImage, {
-            x: 650,
-            y: 367,
-            width: 133,
-            height: 150,
-        });
-    }
 
     // Save the PDF to a file
     const certificateFilePath = `${certificatesPath}${certId}_certificate.pdf`;
