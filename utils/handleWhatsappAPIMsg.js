@@ -351,19 +351,19 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
                 await userState.save();
                 
                 setTimeout(async () => {
-                await sendWhatsAppMessage(sender, `🔥 Want to Win More Bug Bounties? 🔥\n\n
-    You’ve tested your skills in the Cyber Kushti Hackathon—now it’s time to level up! 🚀\n\n
-    🔓 Unlock Your Potential with the ISAC Certified Bug Bounty Researcher (ICBBR) Program!\n\n
-    A fully online, self-paced course designed to help you win bug bounties & master cybersecurity with real-world hands-on labs!\n\n
+                await sendWhatsAppMessage(sender, `🔥 Want to Win More Bug Bounties? 🔥\n
+    You’ve tested your skills in the Cyber Kushti Hackathon—now it’s time to level up! 🚀\n
+    🔓 Unlock Your Potential with the ISAC Certified Bug Bounty Researcher (ICBBR) Program!\n
+    A fully online, self-paced course designed to help you win bug bounties & master cybersecurity with real-world hands-on labs!\n
     🔥 What you get:
     ✅ 30 hands-on bug bounty labs on Cyberange Upskillr Platform
     ✅ 10+ hours of expert training videos
     ✅ Live weekly AMA (Ask Me Anything) sessions with top researchers
     ✅ Certification upon completion – boost your cybersecurity profile!
     ✅ Exclusive invite-only events from BreachX for top performers
-    ✅ Guidance to help you crack real bug bounty challenges\n\n
-    💰 All this for just ₹2,999 (incl. GST)!\n\n
-    Don’t just participate—start winning!\n\n
+    ✅ Guidance to help you crack real bug bounty challenges\n
+    💰 All this for just ₹2,999 (incl. GST)!\n
+    Don’t just participate—start winning!\n
     Enrolment Link : https://rzp.io/rzp/5bzgrhs`);
                 }, 5000);
             }
