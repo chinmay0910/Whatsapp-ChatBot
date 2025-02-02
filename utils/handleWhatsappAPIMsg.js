@@ -285,39 +285,26 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
         if (isValidEmail(email)) {
             userState.email = email;
             await userState.save();
-            await sendWhatsAppMessage(sender, 'Email saved successfully! Please upload your profile picture for generating the completion certificate.');
+    
+            // Start the quiz directly
+            const firstQuestion = quizQuestions[0];
+    
+            if (firstQuestion.question.includes('/uploads/')) {
+                // If the first question is an image, send the media URL
+                const serverUrl = "https://whatsapp-chatbot-em4i.onrender.com";
+                const mediaUrl = `${serverUrl}${firstQuestion.question}`;
+                await sendWhatsAppMessage(sender, "Email saved successfully! Let's start the quiz.\n All the best 🙌");
+                await sendWhatsAppMessage(sender, "", mediaUrl);
+            } else {
+                // If the first question is a text-based question, send it normally
+                await sendWhatsAppMessage(sender, "Email saved successfully! Let's start the quiz.\n All the best 🙌");
+                await sendWhatsAppMessage(sender, firstQuestion.question + "\n" + firstQuestion.options);
+            }
         } else {
             await sendWhatsAppMessage(sender, 'Invalid email format. Please try again.');
         }
-    } 
-    else if (userState && userState.email && !userState.photoPath && imageData != null) {
-        const mediaID = imageData.id;
-        // console.log(mediaID);
-        
-        const imagePath = await sendGetRequest(mediaID);
-        // console.log("IMAGEPATH>> "+imagePath);
-        
-        // Save this image path to the user state or database if necessary
-        const userState = await UserQuizState.findOne({ userId: sender });
-        userState.photoPath = imagePath;
-        await userState.save();
-
-        // await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n" + quizQuestions[0].question + "\n" + quizQuestions[0].options);
-        // Check if the first question is an image
-        const firstQuestion = quizQuestions[0];
-        if (firstQuestion.question.includes('/uploads/')) {
-            // If the first question is an image, send the media URL
-            const serverUrl = "https://whatsapp-chatbot-em4i.onrender.com";
-            const mediaUrl = `${serverUrl}${firstQuestion.question}`;
-            await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n All the best 🙌");  // Send the media URL
-            await sendWhatsAppMessage(sender, "", mediaUrl);
-        } else {
-            // If the first question is a text-based question, send it normally
-            await sendWhatsAppMessage(sender, "Photo received! Let's start the quiz.\n All the best 🙌");
-            await sendWhatsAppMessage(sender, firstQuestion.question + "\n" + firstQuestion.options);
-        }
     }
-    else if (userState  && userState.photoPath && message) {
+    else if (userState && userState.email && message) {
         const currentQuestionIndex = userState.questionIndex;
         const correctAnswer = quizQuestions[currentQuestionIndex].answer;
 
