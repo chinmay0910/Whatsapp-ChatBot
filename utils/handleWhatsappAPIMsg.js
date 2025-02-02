@@ -275,6 +275,27 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
         });
         await userState.save();
 
+        await sendWhatsAppMessage(sender, `🚀 National Cyber Conclave 2025 + Defend The Flag (DTF), in collaboration with NIT Calicut and Skillablers! 🚀
+Sponsored by BreachX Bug Bounty Platform, Dell Technologies, kyndryl, Cyberproof and 63SATS.
+
+Join CERT-IN & ISAC Foundation at NIT Calicut on Feb 7-8, 2025, for an exclusive cybersecurity experience featuring Defend The Flag (DTF) – an exclusive program for CISOs and senior leadership!
+
+🔥 Why Attend? 🔥
+✅ Expert Panels with CERT-IN, ISAC & Industry Leaders
+✅ Leveraging Bug Bounty for Risk Management
+✅ Exclusive Networking Event for CISOs
+
+🔗 Register Now: www.thecyberconclave.com
+📍 Venue: NIT Calicut, Kerala
+📅 Dates: 7-8 February 2025
+
+🌴 Why Calicut? 🌴
+After the hacking, enjoy Kozhikode’s rich history & landscapes:
+✅ Kappad Beach – Where Vasco da Gama first landed in India
+✅ Malabar Cuisine – Taste the legendary biryanis & Sulaimani chai
+✅ Wayanad’s Waterfalls & Wildlife – Just a short drive away
+
+🌟 Cybersecurity + Culture = An Unmissable Experience! 🌟`);
         await sendWhatsAppMessage(sender, 'Welcome to the Cybersecurity Quiz! Please enter your name to begin:');
     } else if (userState && !userState.name) {
         userState.name = message.trim();
@@ -351,20 +372,27 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
                 await userState.save();
                 
                 setTimeout(async () => {
-                await sendWhatsAppMessage(sender, `🔥 Want to Win More Bug Bounties? 🔥\n
-    You’ve tested your skills in the Cyber Kushti Hackathon—now it’s time to level up! 🚀\n
-    🔓 Unlock Your Potential with the ISAC Certified Bug Bounty Researcher (ICBBR) Program!\n
-    A fully online, self-paced course designed to help you win bug bounties & master cybersecurity with real-world hands-on labs!\n
-    🔥 What you get:
-    ✅ 30 hands-on bug bounty labs on Cyberange Upskillr Platform
-    ✅ 10+ hours of expert training videos
-    ✅ Live weekly AMA (Ask Me Anything) sessions with top researchers
-    ✅ Certification upon completion – boost your cybersecurity profile!
-    ✅ Exclusive invite-only events from BreachX for top performers
-    ✅ Guidance to help you crack real bug bounty challenges\n
-    💰 All this for just ₹2,999 (incl. GST)!\n
-    Don’t just participate—start winning!\n
-    Enrolment Link : https://rzp.io/rzp/5bzgrhs`);
+                await sendWhatsAppMessage(sender, `🔥 Want to Win More Bug Bounties? 🔥
+
+You’ve tested your skills in the Cyber Kushti Hackathon—now it’s time to level up! 🚀
+
+🔓 Unlock Your Potential with the ISAC Certified Bug Bounty Researcher (ICBBR) Program!
+
+A fully online, self-paced course designed to help you win bug bounties & master cybersecurity with real-world hands-on labs!
+
+🔥 What you get:
+✅ 30 hands-on bug bounty labs on Cyberange Upskillr Platform
+✅ 10+ hours of expert training videos
+✅ Live weekly AMA (Ask Me Anything) sessions with top researchers
+✅ Certification upon completion – boost your cybersecurity profile!
+✅ Exclusive invite-only events from BreachX for top performers
+✅ Guidance to help you crack real bug bounty challenges
+
+💰 All this for just ₹2,999 (incl. GST)!
+
+Don’t just participate—start winning!
+
+Enrolment Link : https://rzp.io/rzp/5bzgrhs`);
                 }, 5000);
             }
         }
