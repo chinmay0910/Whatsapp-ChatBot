@@ -373,7 +373,7 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
             const name = userState.name;
             const email = userState.email;
 
-            await sendWhatsAppMessage(sender, `Quiz complete! Your score: ${finalScore}/${quizQuestions.length}`);
+            // await sendWhatsAppMessage(sender, `Quiz complete! Your score: ${finalScore}/${quizQuestions.length}`);
             const certId = await sendCertificate(sender, name, finalScore, userState.photoPath);
             if (certId) {
                 saveQuizResult(name, finalScore, email, certId);

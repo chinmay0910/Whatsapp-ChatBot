@@ -134,7 +134,7 @@ async function fetchStats() {
     document.querySelector("#totalUsers").textContent = data.totalUsers;
     document.querySelector("#completedQuizzes").textContent = data.completedQuizzes;
     document.querySelector("#verifiedUsers").textContent = data.verifiedUsers;
-    document.querySelector("#averageScore").textContent = data.averageScore + "%";
+    document.querySelector("#averageScore").textContent = data.averageScore;
   } catch (error) {
     console.error("Error fetching stats:", error);
   }
