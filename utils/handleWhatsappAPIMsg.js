@@ -317,7 +317,7 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
             await sendWhatsAppMessage(sender, firstQuestion.question + "\n" + firstQuestion.options);
         }
     }
-    else if (userState && userState.verified && userState.photoPath && message) {
+    else if (userState  && userState.photoPath && message) {
         const currentQuestionIndex = userState.questionIndex;
         const correctAnswer = quizQuestions[currentQuestionIndex].answer;
 
