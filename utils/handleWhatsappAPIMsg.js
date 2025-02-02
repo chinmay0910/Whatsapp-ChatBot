@@ -283,32 +283,14 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
     } else if (userState && userState.name && !userState.email) {
         const email = message.trim();
         if (isValidEmail(email)) {
-            const otp = generateOtp();
             userState.email = email;
-            userState.otp = otp;
             await userState.save();
-
-            sendMail(email, 'Quiz OTP Verification', `${otp}`);
-            await sendWhatsAppMessage(sender, 'An OTP has been sent to your email. Please enter the OTP to verify your email. \n\n\n Wrong Email ID ? Just type *CHANGE EMAIL* :)');
+            await sendWhatsAppMessage(sender, 'Email saved successfully! Please upload your profile picture for generating the completion certificate.');
         } else {
             await sendWhatsAppMessage(sender, 'Invalid email format. Please try again.');
         }
-    } else if (userState && userState.otp && !userState.verified) {
-        if (message.toUpperCase() === "CHANGE EMAIL" && userState && userState.email) {
-            // Reset email and allow the user to enter a new email
-            userState.email = null;
-            userState.otp = null;
-            await userState.save();
-            await sendWhatsAppMessage(sender, 'Email reset. Please enter your email again:');
-        }else if (message === userState.otp) {
-            userState.verified = true;
-            await userState.save();
-            await sendWhatsAppMessage(sender, 'Email verified successfully! Please upload your profile picture for generating the completion certificate.');
-        } else {
-            await sendWhatsAppMessage(sender, 'Invalid OTP. Please try again.');
-        }
-    }
-    else if (userState && userState.verified && !userState.photoPath && imageData != null) {
+    } 
+    else if (userState && userState.email && !userState.photoPath && imageData != null) {
         const mediaID = imageData.id;
         // console.log(mediaID);
         
