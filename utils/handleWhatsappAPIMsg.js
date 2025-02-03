@@ -237,10 +237,26 @@ async function handleIncomingMessage(sender, messageBody, imageData) {
     const quizQuestions = await fetchQuizQuestions();
     let userState = await UserQuizState.findOne({ userId: sender });
 
-    const scehduleQuiz = false;
+    const scehduleQuiz = true;
     
     if(scehduleQuiz){
-        await sendWhatsAppMessage(sender, `Welcome to the *National Cybersecurity Conclave*, \nThe *Round 1* has not started yet. Stay Tuned!\n\nWe wish you all the best!`);
+        await sendWhatsAppMessage(sender, `Hello, Thank you for your message, The First Round of Cyber Kushti 2025 is now over!! 🚩
+
+
+🔓 Unlock Your Potential with the ISAC Certified Bug Bounty Researcher (ICBBR) Program!
+A fully online, self-paced course designed to help you win bug bounties & master cybersecurity with real-world hands-on labs!
+
+🔥 What you get:
+✅ 30 hands-on bug bounty labs on Cyberange Upskillr Platform
+✅ 10+ hours of expert training videos
+✅ Live weekly AMA (Ask Me Anything) sessions with top researchers
+✅ Certification upon completion – boost your cybersecurity profile!
+✅ Exclusive invite-only events from BreachX for top performers
+✅ Guidance to help you crack real bug bounty challenges
+
+💰 All this for just ₹2,999 (incl. GST)!
+
+Enrolment Link : https://rzp.io/rzp/5bzgrhs`);
         return;
     }
 
