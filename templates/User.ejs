@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -24,9 +25,17 @@
     <%- include('partials/navbar.ejs'); %>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
-                <p class="mt-1 text-sm text-gray-500">Manage and monitor user progress and performance</p>
+            <div class="mb-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
+                    <p class="mt-1 text-sm text-gray-500">Manage and monitor user progress and performance</p>
+                </div>
+                <button 
+                        id="exportExcel"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                    <i data-lucide="file-spreadsheet" class="mr-2 h-4 w-4"></i>
+                    Export to Excel
+                </button>
             </div>
 
             <!-- Search and Filters -->

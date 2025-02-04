@@ -201,6 +201,25 @@ function filterUsers() {
     renderUsers();
 }
 
+// Export to Excel
+function exportToExcel() {
+    const ws = XLSX.utils.json_to_sheet(users.map(user => ({
+        Name: user.name,
+        UserID: user.userId,
+        Email: user.email,
+        Score: `${user.score}%`,
+        Verification: user.verified ? 'Verified' : 'Pending',
+        Payment: user.paymentVerified ? 'Paid' : 'Unpaid',
+        CreatedAt: formatDate(user.createdAt)
+    })));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Users");
+    XLSX.writeFile(wb, "UsersData.xlsx");
+}
+
+document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+
 // Event listeners
 document.querySelectorAll('.sortable').forEach(header => {
     header.addEventListener('click', () => sortUsers(header.dataset.sort));
