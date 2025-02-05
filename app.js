@@ -6,7 +6,8 @@ const questionRoutes = require('./routes/questionRoutes');
 const UserQuizState = require('./models/UserQuizState');
 const Payment = require('./models/Payment');
 const path = require('path');
-const handleIncomingMessage = require('./utils/handleWhatsappAPIMsg');
+// const handleIncomingMessage = require('./utils/handleWhatsappAPIMsg');
+const handleConfirmationMessage = require('./utils/handleRegisteration');
 const axios = require('axios');
 
 // contollers
@@ -182,7 +183,7 @@ app.get("/webhook", (req, res) => {
 };*/
 
 // Main webhook handler
-app.post('/webhook', async (req, res) => {
+/*app.post('/webhook', async (req, res) => {
   try {
     console.log('Incoming Webhook Payload:', JSON.stringify(req.body, null, 2));
 
@@ -228,6 +229,46 @@ app.post('/webhook', async (req, res) => {
     }
 
     res.status(200).send({ success: true, message: 'Webhook processed successfully' });
+  } catch (error) {
+    console.error('Error handling webhook:', error.message);
+    res.status(500).send({ error: 'Internal Server Error', details: error.message });
+  }
+});*/
+
+app.post('/webhook', async (req, res) => {
+  try {
+    console.log('Incoming Webhook Payload:', JSON.stringify(req.body, null, 2));
+
+    const entry = req.body?.entry?.[0];
+    if (!entry) {
+      console.error('Invalid payload: Missing entry');
+      return res.status(400).send({ error: 'Invalid payload: Missing entry' });
+    }
+
+    const changes = entry.changes?.[0];
+    if (!changes) {
+      console.error('Invalid payload: Missing changes');
+      return res.status(404).send({ error: 'Invalid payload: Missing changes' });
+    }
+
+    const value = changes.value;
+    const messageData = value.messages?.[0];
+    if (!messageData) {
+      console.error('Invalid payload: Missing message data');
+      return res.status(404).send({ error: 'Invalid payload: Missing message data' });
+    }
+
+    const phoneNumberId = value.metadata?.phone_number_id;
+    const from = messageData.from;
+    const msg = messageData.text?.body || '';
+    const messageType = messageData.type;
+
+    console.log(`Received message from ${from}: ${msg}`);
+    console.log(`Message Type: ${messageType}`);
+
+    await handleConfirmationMessage(from, msg);
+    res.status(200).send({ success: true, message: 'Webhook processed successfully' });
+    
   } catch (error) {
     console.error('Error handling webhook:', error.message);
     res.status(500).send({ error: 'Internal Server Error', details: error.message });
